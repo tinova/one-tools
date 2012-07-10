@@ -97,3 +97,22 @@ Opens the VNC console of a running VM:
 
     $ onevnc 9
 
+onebootstrap
+------------
+
+This command should be executed only with a fresh OpenNebula installation. It
+will create some resources:
+
+* __host__: localhost with KVM configuration
+* __vnet__: a few IPs in the 172.16.0.0/24 network connected to bridge `br0`
+* __datastore__: a file-system based user datastore
+* __image__: an Ubuntu image (users will have to execute first
+`bootstrap/image/download_ubuntu.sh`)
+* __template__: an Ubuntu template ready to be instantiated
+
+All of these resources can be customized by editing the files inside
+`bootstrap/`. Other resources can be added and they will also be created.
+
+The datastore where the images will be instantiated needs to have `DEFAULT =
+YES` inside the template. This is only necessary if more than one template is
+created.

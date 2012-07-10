@@ -1,0 +1,42 @@
+#!/bin/bash
+
+REALPATH=$(readlink -f $0)
+cd `dirname $REALPATH`
+
+for host in $(ls bootstrap/host/*.host 2>/dev/null); do
+    unset IM VMM NET
+    source $host
+
+    HOSTNAME=$(basename $host)
+    HOSTNAME=${HOSTNAME%%.host}
+
+    onehost create $HOSTNAME -i $IM -v $VMM -n $NET
+done
+
+for vnet in $(ls bootstrap/vnet/*.vnet 2>/dev/null); do
+    onevnet create $vnet
+done
+
+unset DEFAULT_DS
+for datastore in $(ls bootstrap/datastore/*.datastore 2>/dev/null); do
+    DS_ID=$(onedatastore create $datastore|awk '{print $2}')
+
+    # If it's the first registered datastore, mark it as default
+    [ -z "$DEFAULT_DS" ] && DEFAULT_DS=$DS_ID
+
+    # If it has DEFAULT inside the template mark it as default
+    if cat $datastore | grep -q DEFAULT; then
+        DEFAULT_DS=$DS_ID
+    fi
+done
+
+# If no datastore was created, used DS 1 as the default
+[ -z "DEFAULT_DS" ] && DEFAULT_DS=1
+
+for image in $(ls bootstrap/image/*.image 2>/dev/null); do
+    oneimage create $image -d $DEFAULT_DS
+done
+
+for template in $(ls bootstrap/template/*.template 2>/dev/null); do
+    onetemplate create $template
+done

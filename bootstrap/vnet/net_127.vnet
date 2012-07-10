@@ -1,0 +1,12 @@
+NAME = "net_172"
+TYPE = fixed
+BRIDGE = br0
+
+LEASES = [ IP = 172.16.0.200 ]
+LEASES = [ IP = 172.16.0.201 ]
+LEASES = [ IP = 172.16.0.202 ]
+LEASES = [ IP = 172.16.0.203 ]
+LEASES = [ IP = 172.16.0.204 ]
+LEASES = [ IP = 172.16.0.205 ]
+LEASES = [ IP = 172.16.0.206 ]
+LEASES = [ IP = 172.16.0.207 ]
