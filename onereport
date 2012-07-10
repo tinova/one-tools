@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+require 'rexml/document'
+require 'pp'
+
+vmpool_x = `onevm list -x`
+vmpool   = REXML::Document.new(vmpool_x).root
+
+first = true
+
+vmpool.elements.each("VM") do |vm|
+    puts unless first
+    first = false if first
+
+    puts "VM: " + vm.elements["ID"].text
+    puts "NAME: " + vm.elements["NAME"].text
+    if hostname = vm.elements["HISTORY_RECORDS/HISTORY/HOSTNAME"].text
+        puts "HOSTNAME: " + hostname
+    end
+    vm.elements.each("TEMPLATE/GRAPHICS") do |vnc|
+        if vnc_port = vnc.elements["PORT"]
+            puts "VNC PORT: " + vnc_port.text
+        end
+    end
+    vm.elements.each("TEMPLATE/NIC") do |nic|
+        if ip = nic.elements["IP"]
+            puts "IP: " + ip.text 
+        end
+    end
+end

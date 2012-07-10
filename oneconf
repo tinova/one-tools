@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+
+# This script prepares oned.conf and sched.conf
+
+require "fileutils"
+
+class String
+    def uncomment(string)
+        self.gsub!(string) do |m|
+            m.split("\n").map{|e| e.gsub(/^([\t\s]*)#+/,'\1')}.join("\n")
+        end
+    end
+end
+
+if ONE_LOCATION = ENV['ONE_LOCATION']
+    oned_conf  = ONE_LOCATION + '/etc/oned.conf'
+    sched_conf = ONE_LOCATION + '/etc/sched.conf'
+else
+    oned_conf = '/etc/one/oned.conf'
+    sched_conf = '/etc/one/sched.conf'
+end
+
+now = Time.now.strftime('%Y%m%d%H%M%S').to_s
+
+FileUtils.cp(oned_conf, oned_conf + '.' + now)
+FileUtils.cp(sched_conf, sched_conf + '.' + now)
+
+# oned.conf
+
+conf = File.read(oned_conf)
+
+single_vals = {
+    :manager_timer => 5,
+    :host_monitoring_interval => 10,
+    :vm_polling_interval => 10
+}
+
+single_vals.each do |k,v|
+    k = k.to_s.upcase
+    v = v.to_s
+
+    if conf.match(/^#{k}/)
+        conf.gsub!(/^#{k}.*$/,"#{k} = #{v}")
+    else
+        conf << "\n#{k} = #{v}"
+    end
+end
+
+conf.uncomment('#TM_MAD = [
+#    name       = "tm_ssh",
+#    executable = "one_tm",
+#    arguments  = "tm_ssh/tm_ssh.conf" ]')
+conf.uncomment('#TM_MAD = [
+#    name       = "tm_dummy",
+#    executable = "one_tm",
+#    arguments  = "tm_dummy/tm_dummy.conf" ]')
+conf.uncomment('#IM_MAD = [ name="im_dummy", executable="one_im_dummy"]')
+conf.uncomment('#VM_MAD = [ name="vmm_dummy", executable="one_vmm_dummy", type="xml" ]')
+
+File.open(oned_conf,'w'){|f| f.write(conf)}
+
+# sched.conf
+
+conf = File.read(sched_conf)
+
+conf.gsub!('SCHED_INTERVAL = 30','SCHED_INTERVAL = 5')
+File.open(sched_conf,'w'){|f| f.write(conf)}
+

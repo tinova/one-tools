@@ -1,0 +1,2 @@
+#!/bin/bash
+onevm deploy `onevm create $1|awk '{print $2}'` `onehost list|awk 'END{print $1}'`

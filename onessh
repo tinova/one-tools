@@ -1,0 +1,10 @@
+#!/bin/bash
+
+VM=$1
+shift
+
+IP=$(onevm show $VM|grep IP=|grep -Eo '[0-9.]+'|head -n 1)
+
+ssh "$IP" "$*"
+
+

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PORT=$(onevm show $1|grep PORT|grep -o '[0-9]\+')
+if [ -n "$PORT" ]; then
+    vncviewer localhost::$PORT
+else
+    echo no port found.
+fi

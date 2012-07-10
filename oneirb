@@ -1,0 +1,83 @@
+#!/usr/bin/ruby
+
+ONE_LOCATION=ENV["ONE_LOCATION"]
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION="/usr/lib/one/ruby"
+    VAR_LOCATION = "/var/lib/one"
+    TEMPLATE_LOCATION="/etc/one/occi_templates"
+    CONFIGURATION_FILE = "/etc/one/occi-server.conf"
+else
+    RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby"
+    VAR_LOCATION = ONE_LOCATION+"/var"
+    TEMPLATE_LOCATION=ONE_LOCATION+"/etc/occi_templates"
+    CONFIGURATION_FILE = ONE_LOCATION+"/etc/occi-server.conf"
+end
+
+OCCI_AUTH = VAR_LOCATION + "/.one/occi_auth"
+
+$: << RUBY_LIB_LOCATION
+$: << RUBY_LIB_LOCATION+"/cloud/occi"
+$: << RUBY_LIB_LOCATION+"/cloud" # For the Repository Manager
+
+
+
+################################################
+# Required libraries
+################################################
+require 'yaml'
+require 'erb'
+require 'tempfile'
+require 'fileutils'
+require 'json'
+
+require 'OpenNebula'
+include OpenNebula
+
+require 'VirtualMachineOCCI'
+require 'VirtualMachinePoolOCCI'
+require 'VirtualNetworkOCCI'
+require 'VirtualNetworkPoolOCCI'
+require 'ImageOCCI'
+require 'ImagePoolOCCI'
+require 'UserOCCI'
+require 'UserPoolOCCI'
+
+require 'pp'
+
+if ENV['ONE_AUTH']
+  authfile = ENV['ONE_AUTH']
+else
+  authfile = "ENV['HOME']/.one/one_auth"
+end
+
+# OpenNebula credentials
+CREDENTIALS = File.read(authfile).strip
+# XML_RPC endpoint where OpenNebula is listening
+ENDPOINT    = "http://localhost:2633/RPC2"
+
+@client = Client.new(CREDENTIALS, ENDPOINT)
+
+begin
+    conf = YAML.load_file(CONFIGURATION_FILE)
+rescue Exception => e
+    puts "Error parsing config file #{CONFIGURATION_FILE}: #{e.message}"
+    exit 1
+end
+
+conf[:template_location] = TEMPLATE_LOCATION
+
+@config = conf
+require "irb"
+
+if __FILE__ == $0
+  IRB.start(__FILE__)
+else
+  # check -e option
+  if /^-e$/ =~ $0
+    IRB.start(__FILE__)
+  else
+    IRB.setup(__FILE__)
+  end
+end
+

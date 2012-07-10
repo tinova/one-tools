@@ -1,0 +1,13 @@
+#!/bin/bash
+
+function getattr {
+    echo "$INFO"|grep -E "^$1\b"|awk '{print $3}'
+}
+
+INFO=$(onetemplate show $1)
+
+ID=`getattr ID`
+NAME=`getattr NAME`
+
+echo onetemplate instantiate $ID -n $NAME
+onetemplate instantiate $ID -n $NAME
