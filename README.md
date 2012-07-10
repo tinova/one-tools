@@ -114,5 +114,5 @@ All of these resources can be customized by editing the files inside
 `bootstrap/`. Other resources can be added and they will also be created.
 
 The datastore where the images will be instantiated needs to have `DEFAULT =
-YES` inside the template. This is only necessary if more than one template is
+YES` inside the template. This is only necessary if more than one datastore is
 created.
