@@ -11,7 +11,7 @@ Contributions, hacks, ideas, improvements are more than welcome!
 Commands
 --------
 
-- [__one__log](#onelog): Displays OpenNebula logs.
+- [__onelog__](#onelog): Displays OpenNebula logs.
 - [__oneinstantiate__](#oneinstantiate): Instantiates template with a name.
 - [__onedeploy__](#onedeploy): Creates and deploys instantaneously a Virtual Machine.
 - [__onereport__](#onereport): Displays a summary of running VMs.
