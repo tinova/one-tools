@@ -1,58 +1,22 @@
+
 OpenNebula CLI Tools
 ====================
 
-This a collection of scripts useful for OpenNebula administrators.
-Contributions are welcome.
+This a collection of scripts useful for OpenNebula administrators. Their aim is
+to improve the user experience in the shell with simple, short and elegant
+scripts that use the power and simplicity of OpenNebula's CLI commands.
 
-oneconf
--------
+Contributions, hacks, ideas, improvements are more than welcome!
 
-This script backs up and rewrites `oned.conf` and `sched.conf`, performing the
-following changes:
-
-### oned.conf
-
-- `MANAGER_TIMER`: 5 seconds
-- `HOST_MONITORING_INTERVAL`: 10 seconds
-- `VM_POLLING_INTERVAL`: 10 seconds
-- Enables `TM_SSH`
-- Enables `TM_DUMMY`
-- Enables `IM_DUMMY`
-- Enables `VMM_DUMMY`
-
-### sched.conf
-
-- `SCHED_INTERVAL`: 5 seconds
-
-onedeploy
----------
-
-Creates a Virtual Machines and deploys it instantaneously in the first host it
-founds:
-
-    $ onedeploy vm_template.one
-
-oneinstantiate
---------------
-
-A wrapper for the instantiate command. It instantiates a template using the name
-of the template as the Virtual Machine name:
-
-    $ oneinstantiate 0
-    onetemplate instantiate 0 -n ubuntu
-    VM ID: 11
-
-oneirb
-------
-
-Enters a irb environment with all the OpenNebula libraries loaded. The instance
-variable `@client` is already available in the IRB shell.
-
-    $ oneirb
-    >> vm = VirtualMachine.new(VirtualMachine.build_xml('10'), @client);
-    ?> vm.info;
-    ?> vm['NAME']
-    => "ttylinux"
+- __onelog__: Displays OpenNebula logs.
+- __oneinstantiate__: Instantiates template with a name.
+- __onedeploy__: Creates and deploys instantaneously a Virtual Machine.
+- __onereport__: Displays a summary of running VMs.
+- __onessh__: SSH's into a running VM.
+- __onevnc__: Opens the VNC console of a running VM.
+- __oneirb__: Opens an IRB session with all the OpenNebula libraries.
+- __oneconf__: Modifies the default configuration files.
+- __onebootstrap__: Creates initial OpenNebula resources.
 
 onelog
 ------
@@ -65,6 +29,24 @@ paramenter, the vm.log is displayed:
     $ onelog 10
     [ opens the vm.log for VM 10 in your $PAGER ]
 
+oneinstantiate
+--------------
+
+A wrapper for the `onetemplate instantiate` command. It instantiates a template
+using the name of the template as the Virtual Machine name:
+
+    $ oneinstantiate 0
+    onetemplate instantiate 0 -n ubuntu
+    VM ID: 11
+
+
+onedeploy
+---------
+
+Creates a Virtual Machine and deploys it instantaneously in the first available
+host it founds:
+
+    $ onedeploy vm_template.one
 
 onereport
 ---------
@@ -96,6 +78,38 @@ onevnc
 Opens the VNC console of a running VM:
 
     $ onevnc 9
+
+oneirb
+------
+
+Enters an irb environment with all the OpenNebula libraries loaded. The instance
+variable `@client` is available in the IRB shell.
+
+    $ oneirb
+    >> vm = VirtualMachine.new(VirtualMachine.build_xml('10'), @client);
+    ?> vm.info;
+    ?> vm['NAME']
+    => "ttylinux"
+
+oneconf
+-------
+
+This ruby script backs up and rewrites `oned.conf` and `sched.conf`, performing
+the following changes:
+
+#### oned.conf
+
+- `MANAGER_TIMER`: 5 seconds
+- `HOST_MONITORING_INTERVAL`: 10 seconds
+- `VM_POLLING_INTERVAL`: 10 seconds
+- Enables `TM_SSH`
+- Enables `TM_DUMMY`
+- Enables `IM_DUMMY`
+- Enables `VMM_DUMMY`
+
+#### sched.conf
+
+- `SCHED_INTERVAL`: 5 seconds
 
 onebootstrap
 ------------
