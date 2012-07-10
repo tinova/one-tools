@@ -8,15 +8,18 @@ scripts that use the power and simplicity of OpenNebula's CLI commands.
 
 Contributions, hacks, ideas, improvements are more than welcome!
 
-- __onelog__: Displays OpenNebula logs.
-- __oneinstantiate__: Instantiates template with a name.
-- __onedeploy__: Creates and deploys instantaneously a Virtual Machine.
-- __onereport__: Displays a summary of running VMs.
-- __onessh__: SSH's into a running VM.
-- __onevnc__: Opens the VNC console of a running VM.
-- __oneirb__: Opens an IRB session with all the OpenNebula libraries.
-- __oneconf__: Modifies the default configuration files.
-- __onebootstrap__: Creates initial OpenNebula resources.
+Commands
+--------
+
+- [__one__log](#onelog): Displays OpenNebula logs.
+- [__oneinstantiate__](#oneinstantiate): Instantiates template with a name.
+- [__onedeploy__](#onedeploy): Creates and deploys instantaneously a Virtual Machine.
+- [__onereport__](#onereport): Displays a summary of running VMs.
+- [__onessh__](#onessh): SSH's into a running VM.
+- [__onevnc__](#onevnc): Opens the VNC console of a running VM.
+- [__oneirb__](#oneirb): Opens an IRB session with all the OpenNebula libraries.
+- [__oneconf__](#oneconf): Modifies the default configuration files.
+- [__onebootstrap__](#onebootstrap): Creates initial OpenNebula resources.
 
 onelog
 ------
