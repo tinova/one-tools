@@ -1,0 +1,157 @@
+#!/usr/bin/env ruby
+
+require 'getoptlong'
+require 'tempfile'
+require 'open-uri'
+
+HELP_TEXT=<<EOT
+Usage:
+    onecast [<options>] <base_template>
+
+Options:
+    -d, --data <name>=<value>       Sets the value that goes into a template
+    -c, --create [vm|vnet|image]    Calls create command of onvm, onevnet
+                                    or oneimage. If the object type is no
+                                    specified then onevm is called
+    -h, --help                      Prints this help text
+
+Template:
+    Template variables have the form ${NAME}. The name of the variable is
+    case sensitive and is translated to the value specified in the command
+    line or the environment. It can also have a default value if the variable
+    is not specified in the command line or not found in the environment this
+    way ${NAME|default value}.
+EOT
+
+class OneCast
+    attr_reader :vars, :error
+
+    REG_VAR=/\$\{([^}|]+)(\|([^}]+))?\}/
+
+    def initialize(template, data)
+        @vars=ENV.to_hash
+        @error=nil
+        @template=template.clone
+
+        data.each do |text|
+            parsed=parse_data_variable(text)
+            raise "Bad formatted variable: '#{text}'" if !parsed
+            @vars[parsed[0]]=parsed[1].gsub("\\n", "\n")
+        end
+    end
+
+    def rewrite_template
+        @error=nil
+
+        @template.gsub(REG_VAR) do |var|
+            match=REG_VAR.match(var)
+
+            var_name=match[1]
+            default_value=match[3]
+
+            d=@vars[var_name]
+
+            d||=default_value
+
+            if !d
+                @error||=''
+                @error+="Variable '#{var_name}' not set. "
+            end
+
+            d
+        end
+    end
+
+private
+
+    def parse_data_variable(text)
+        m=(/^([^=]+)=["']?(.*)["']?/m).match(text)
+        if m
+            m[1,2]
+        else
+            nil
+        end
+    end
+
+end
+
+def print_help
+    puts HELP_TEXT
+end
+
+opts = GetoptLong.new(
+     [ '--help',    '-h',   GetoptLong::NO_ARGUMENT ],
+     [ '--data',    '-d',   GetoptLong::REQUIRED_ARGUMENT ],
+     [ '--create',  '-c',   GetoptLong::OPTIONAL_ARGUMENT]
+)
+
+text_variables=Array.new
+create=false
+
+begin
+    opts.each do |opt, arg|
+        case opt
+        when '--data'
+            text_variables<<arg
+        when '--create'
+            case arg
+            when nil, ''
+                create='vm'
+            when 'vm', 'vnet', 'image'
+                create=arg
+            else
+                raise "Invalid object to create '#{arg}'."
+            end
+        when '--help'
+            print_help
+            exit(0)
+        else
+            print_help
+            exit(0)
+        end
+    end
+rescue StandardError => e
+    STDERR.puts e
+    print_help
+    exit(-1)
+end
+
+template_name=ARGV[0]
+
+if !template_name
+    STDERR.puts "ERROR: Template file not provided.\n\n"
+    print_help
+    exit(-1)
+end
+
+begin
+    file=open(template_name)
+    template_text=file.read
+    file.close
+rescue
+    puts "Could not read template file '#{template_name}'."
+    exit(-1)
+end
+
+begin
+    onecast=OneCast.new(template_text, text_variables)
+rescue Exception => e
+    puts e
+    exit(-1)
+end
+
+final_template=onecast.rewrite_template
+errors=onecast.error
+
+
+STDERR.puts errors if errors
+
+if create
+    temp=Tempfile.new "#{create}.one"
+    temp.write final_template
+    temp.close
+    system "one#{create} create -v #{temp.path}"
+    temp.unlink
+else
+    puts final_template
+end
