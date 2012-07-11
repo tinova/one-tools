@@ -20,6 +20,7 @@ Commands
 - [__oneirb__](#oneirb): Opens an IRB session with all the OpenNebula libraries.
 - [__oneconf__](#oneconf): Modifies the default configuration files.
 - [__onebootstrap__](#onebootstrap): Creates initial OpenNebula resources.
+- [__onecast__](#onecast): OpenNebula templates with variables.
 
 onelog
 ------
@@ -133,3 +134,75 @@ All of these resources can be customized by editing the files inside
 The datastore where the images will be instantiated needs to have `DEFAULT =
 YES` inside the template. This is only necessary if more than one datastore is
 created.
+
+onecast
+-------
+
+This tool that can rewrite parts of a VM template substituting the variables it
+contains by some values that the user provides. It also gets values from the
+environment if the values are not explicitly provided by the user and can also
+have a default value so they will be translated to something meaningful if not
+found by other methods.
+
+An example of a VM template meaningful to onecast can be this one:
+
+    NAME    = "${NAME}"
+    CPU     = ${CPU|1.0}
+    VCPU    = ${CPU|1}
+    MEMORY  = ${MEMORY|512}
+    DISK    = [
+        SOURCE  = "${HOME}/images/vm.img",
+        TARGET  = sda
+    ]
+
+In this example we can see that the placeholder for the variable values is
+specified with `${VARIABLE}`. The name of the variable is case sensitive and
+this will be translated to its value (user provided or from the environment) or
+left blank if not found. We have to be careful with variables not set or they
+will render the template unusable in some cases. To overcome this problem, and
+also to give some values that the user may not want to modify, default values
+can be provided alongside the variable name. Variable names with default values
+are specified with `${VARIABLE|default value}`. Doing so if the variable is not
+set by the user in the command line or found in the environment it will be
+substituted by the default value.
+
+It is also very useful to use environment variables to get some information
+specific to the user, in this example we suppose every user has a file called
+`images/vm.img` in their home directory so we use `$HOME` environment variable
+to point to it.
+
+To generate the final template we use the this command:
+
+    $ onecast -d NAME="test vm" test.one
+    NAME    = "test vm"
+    CPU     = 1.0
+    VCPU    = 1
+    MEMORY  = 512
+    DISK    = [
+        SOURCE  = "/home/oneuser/images/vm.img",
+        TARGET  = sda
+    ]
+
+We have to specify the template file to the onecast script and we can also
+provide variables using _-d_ option. This option will have an argument in this
+form `NAME=value` that will be used to substitute any variable in the template
+with that name. More than one of those variables can be added in the command
+line. As another example to illustrate this we can also set the memory to 1Gb
+issuing this command:
+
+    $ onecast -d NAME="test vm" -d MEMORY=1024 test.one
+    NAME    = "test vm"
+    CPU     = 1.0
+    VCPU    = 1
+    MEMORY  = 1024
+    DISK    = [
+        SOURCE  = "/home/oneuser/images/vm.img",
+        TARGET  = sda
+    ]
+
+The output of the command can then be redirected to a file and use it to create
+a new VM or use the parameter _-c_ so the VM is automatically sent to
+OpenNebula:
+
+    $ onecast -d NAME="test vm" -d MEMORY=1024 test.one -c
+    ID: 9
