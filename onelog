@@ -1,15 +1,17 @@
 #!/bin/bash
 
+PAGER=${PAGER:-less}
+
 if [ -n "$ONE_LOCATION" ]; then
     if [ -n "$1" ]; then
-        less $ONE_LOCATION/var/$1/vm.log
+        $PAGER $ONE_LOCATION/var/$1/vm.log
     else
-        less $ONE_LOCATION/var/oned.log
+        $PAGER $ONE_LOCATION/var/oned.log
     fi
 else
     if [ -n "$1" ]; then
-        less /var/log/one/$1.log
+        $PAGER /var/log/one/$1.log
     else
-        less /var/log/one/oned.log
+        $PAGER /var/log/one/oned.log
     fi
 fi
