@@ -80,7 +80,8 @@ SSH's into a running VM:
 onessh-copy-id
 --------------
 
-Copies the public key to a running VM identified by ID or by name. If a second parameter is passwd to the script, it will be used as the username.
+Copies the public key to a running VM identified by ID or by name. If a second
+parameter is passwd to the script, it will be used as the username.
 
     $ onessh-copy-id 9
     $ onessh-copy-id 9 root
