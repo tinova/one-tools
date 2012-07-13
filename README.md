@@ -81,10 +81,17 @@ onessh-copy-id
 --------------
 
 Copies the public key to a running VM identified by ID or by name. If a second
-parameter is passwd to the script, it will be used as the username.
+parameter is passed to the script, it will be used as the username.
 
+    # To the same username
     $ onessh-copy-id 9
+    Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.
+    user@192.168.1.10's password: 
+
+    # To a different username
     $ onessh-copy-id 9 root
+    Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.
+    root@192.168.1.10's password: 
 
 onevnc
 ------
