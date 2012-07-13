@@ -1,0 +1,12 @@
+#!/bin/bash
+
+VM=$1
+USER=$2
+[ -n "$USER" ] && USER="$USER@"
+
+IP=$(onevm show $VM|grep IP=|grep -Eo '[0-9.]+'|head -n 1)
+
+
+ssh-copy-id "${USER}${IP}"
+
+

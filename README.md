@@ -16,6 +16,7 @@ Commands
 - [__onedeploy__](#onedeploy): Creates and deploys instantaneously a Virtual Machine.
 - [__onereport__](#onereport): Displays a summary of running VMs.
 - [__onessh__](#onessh): SSH's into a running VM.
+- [__onessh-copy-id__](#onessh-copy-id): Copies public key to a running VM.
 - [__onevnc__](#onevnc): Opens the VNC console of a running VM.
 - [__oneirb__](#oneirb): Opens an IRB session with all the OpenNebula libraries.
 - [__oneconf__](#oneconf): Modifies the default configuration files.
@@ -75,6 +76,14 @@ onessh
 SSH's into a running VM:
 
     $ onessh 9 -l root
+
+onessh-copy-id
+--------------
+
+Copies the public key to a running VM identified by ID or by name. If a second parameter is passwd to the script, it will be used as the username.
+
+    $ onessh-copy-id 9
+    $ onessh-copy-id 9 root
 
 onevnc
 ------
