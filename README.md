@@ -1,4 +1,3 @@
-
 OpenNebula CLI Tools
 ====================
 
