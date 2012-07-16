@@ -37,6 +37,8 @@ If no argument is passed it displays `oned.log`. One of these arguments can be p
 - `ozones.error`: ozones-server.error
 - `VM_ID`: the vm.log is displayed
 
+Example:
+
     $ onelog
     [ opens oned.log in your $PAGER ]
     $ onelog 10
