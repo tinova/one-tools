@@ -4,13 +4,69 @@ PAGER=${PAGER:-less}
 
 if [ -n "$ONE_LOCATION" ]; then
     if [ -n "$1" ]; then
-        $PAGER $ONE_LOCATION/var/$1/vm.log
+        case "$1" in
+        econe)
+            $PAGER $ONE_LOCATION/var/econe-server.log
+            ;;
+        econe.error)
+            $PAGER $ONE_LOCATION/var/econe-server.error
+            ;;
+        sunstone)
+            $PAGER $ONE_LOCATION/var/sunstone.log
+            ;;
+        sunstone.error)
+            $PAGER $ONE_LOCATION/var/sunstone.error
+            ;;
+        occi)
+            $PAGER $ONE_LOCATION/var/occi-server.log
+            ;;
+        occi.error)
+            $PAGER $ONE_LOCATION/var/occi-server.error
+            ;;
+        ozones)
+            $PAGER $ONE_LOCATION/var/ozones-server.log
+            ;;
+        ozones.error)
+            $PAGER $ONE_LOCATION/var/ozones-server.error
+            ;;
+        *)
+            $PAGER $ONE_LOCATION/var/$1/vm.log
+            ;;
+        esac
     else
         $PAGER $ONE_LOCATION/var/oned.log
     fi
 else
     if [ -n "$1" ]; then
-        $PAGER /var/log/one/$1.log
+        case "$1" in
+        econe)
+            $PAGER /var/log/one/econe-server.log
+            ;;
+        econe.error)
+            $PAGER /var/log/one/econe-server.error
+            ;;
+        sunstone)
+            $PAGER /var/log/one/sunstone.log
+            ;;
+        sunstone.error)
+            $PAGER /var/log/one/sunstone.error
+            ;;
+        occi)
+            $PAGER /var/log/one/occi-server.log
+            ;;
+        occi.error)
+            $PAGER /var/log/one/occi-server.error
+            ;;
+        ozones)
+            $PAGER /var/log/one/ozones-server.log
+            ;;
+        ozones.error)
+            $PAGER /var/log/one/ozones-server.error
+            ;;
+        *)
+            $PAGER /var/log/one/$1.log
+            ;;
+        esac
     else
         $PAGER /var/log/one/oned.log
     fi
