@@ -26,8 +26,17 @@ Commands
 onelog
 ------
 
-If no argument is passed it displays `oned.log`. If a `VM_ID` is passed as a
-paramenter, the vm.log is displayed:
+If no argument is passed it displays `oned.log`. One of these arguments can be passed:
+
+- `econe`: econe-server.log
+- `econe.error`: econe-server.error
+- `occi`: occi-server.log
+- `occi.error`: occi-server.error
+- `sunstone`: sunstone-server.log
+- `sunstone.error`: sunstone-server.error
+- `ozones`: ozones-server.log
+- `ozones.error`: ozones-server.error
+- `VM_ID`: the vm.log is displayed
 
     $ onelog
     [ opens oned.log in your $PAGER ]
@@ -86,12 +95,12 @@ parameter is passed to the script, it will be used as the username.
     # To the same username
     $ onessh-copy-id 9
     Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.
-    user@192.168.1.10's password: 
+    user@192.168.1.10's password:
 
     # To a different username
     $ onessh-copy-id 9 root
     Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.
-    root@192.168.1.10's password: 
+    root@192.168.1.10's password:
 
 onevnc
 ------
