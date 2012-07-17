@@ -4,6 +4,13 @@
 
 require "fileutils"
 
+# Taken from: http://jimeh.me/blog/2010/02/22/built-in-sudo-for-ruby-command-line-tools/
+def sudome
+  if ENV["USER"] != "root"
+    exec("sudo #{ENV['_']} #{ARGV.join(' ')}")
+  end
+end
+
 class String
     def uncomment(string)
         self.gsub!(string) do |m|
@@ -16,6 +23,8 @@ if ONE_LOCATION = ENV['ONE_LOCATION']
     oned_conf  = ONE_LOCATION + '/etc/oned.conf'
     sched_conf = ONE_LOCATION + '/etc/sched.conf'
 else
+    sudome()
+
     oned_conf = '/etc/one/oned.conf'
     sched_conf = '/etc/one/sched.conf'
 end
