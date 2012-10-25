@@ -20,6 +20,7 @@ done
 unset DEFAULT_DS
 for datastore in $(ls $BOOTSTRAP_DIR/datastore/*.datastore 2>/dev/null); do
     DS_ID=$(onedatastore create $datastore|awk '{print $2}')
+    onedatastore chmod $DS_ID 644
 
     # If it's the first registered datastore, mark it as default
     [ -z "$DEFAULT_DS" ] && DEFAULT_DS=$DS_ID
@@ -29,6 +30,28 @@ for datastore in $(ls $BOOTSTRAP_DIR/datastore/*.datastore 2>/dev/null); do
         DEFAULT_DS=$DS_ID
     fi
 done
+
+unset DEFAULT_USER
+unset DEFAULT_PASSWORD
+for user in $(ls $BOOTSTRAP_DIR/user/*.user 2>/dev/null); do
+    username=$(cat $user|cut -d: -f1)
+    password=$(cat $user|cut -d: -f2)
+
+    user_file=$(basename $user)
+    if [ "$user_file" = "default.user" ]; then
+        DEFAULT_USER="$username"
+        DEFAULT_PASSWORD="$password"
+    fi
+
+    oneuser create $username $password
+done
+
+# Change to the default user if provided
+if [ -n "$DEFAULT_USER" -a -n "$DEFAULT_PASSWORD" ]; then
+    TMP=$(mktemp)
+    echo "$DEFAULT_USER:$DEFAULT_PASSWORD" > $TMP
+    export ONE_AUTH=$TMP
+fi
 
 for vnet in $(ls $BOOTSTRAP_DIR/vnet/*.vnet 2>/dev/null); do
     onevnet create $vnet
