@@ -241,3 +241,16 @@ Pings a VM:
 
     $ oneping 9
 
+oneip
+-----
+
+Returns the ip of a VM:
+
+    $ oneping 9
+    172.16.0.200
+
+Useful for things like:
+
+    $ scp myfile root@`oneip 0`:
+
+
