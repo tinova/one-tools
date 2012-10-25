@@ -21,6 +21,8 @@ Commands
 - [__oneconf__](#oneconf): Modifies the default configuration files.
 - [__onebootstrap__](#onebootstrap): Creates initial OpenNebula resources.
 - [__onecast__](#onecast): OpenNebula templates with variables.
+- [__oneip__](#oneip): Returns the IP of a VM.
+- [__oneping__](#oneping): Pings a VM.
 
 onelog
 ------
