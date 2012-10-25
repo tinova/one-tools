@@ -233,3 +233,11 @@ OpenNebula:
 
     $ onecast -d NAME="test vm" -d MEMORY=1024 test.one -c
     ID: 9
+
+oneping
+-------
+
+Pings a VM:
+
+    $ oneping 9
+
