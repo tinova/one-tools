@@ -82,26 +82,31 @@ end
 opts = GetoptLong.new(
      [ '--help',    '-h',   GetoptLong::NO_ARGUMENT ],
      [ '--data',    '-d',   GetoptLong::REQUIRED_ARGUMENT ],
-     [ '--create',  '-c',   GetoptLong::OPTIONAL_ARGUMENT]
+     [ '--create',  '-c',   GetoptLong::OPTIONAL_ARGUMENT],
+     [ '--temp',    '-t',   GetoptLong::OPTIONAL_ARGUMENT]
 )
 
 text_variables=Array.new
 create=false
+temp=false
 
 begin
     opts.each do |opt, arg|
         case opt
         when '--data'
             text_variables<<arg
+
         when '--create'
             case arg
             when nil, ''
                 create='vm'
-            when 'vm', 'vnet', 'image'
+            when 'vm', 'vnet', 'datastore', 'template'
                 create=arg
             else
                 raise "Invalid object to create '#{arg}'."
             end
+        when '--temp'
+            temp=true
         when '--help'
             print_help
             exit(0)
@@ -152,6 +157,14 @@ if create
     temp.close
     system "one#{create} create -v #{temp.path}"
     temp.unlink
+
+    exit(0)
+end
+
+if temp
+    tempf = `mktemp --tmpdir=/tmp --suffix=.one onecast.XXX`.strip
+    File.open(tempf,'w'){|file| file.write final_template}
+    puts tempf
 else
     puts final_template
 end

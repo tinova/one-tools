@@ -3,7 +3,7 @@
 VM=$1
 shift
 
-IP=$(onevm show $VM|grep IP=|grep -Eo '[0-9.]+'|head -n 1)
+IP=$(onevm show $VM -x|grep '<IP>'|grep -o '[0-9.]\+')
 
 ping "$IP"
 

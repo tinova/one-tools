@@ -46,12 +46,12 @@ for user in $(ls $BOOTSTRAP_DIR/user/*.user 2>/dev/null); do
     oneuser create $username $password
 done
 
-# Change to the default user if provided
-if [ -n "$DEFAULT_USER" -a -n "$DEFAULT_PASSWORD" ]; then
-    TMP=$(mktemp)
-    echo "$DEFAULT_USER:$DEFAULT_PASSWORD" > $TMP
-    export ONE_AUTH=$TMP
-fi
+## Change to the default user if provided
+#if [ -n "$DEFAULT_USER" -a -n "$DEFAULT_PASSWORD" ]; then
+#    TMP=$(mktemp)
+#    echo "$DEFAULT_USER:$DEFAULT_PASSWORD" > $TMP
+#    export ONE_AUTH=$TMP
+#fi
 
 for vnet in $(ls $BOOTSTRAP_DIR/vnet/*.vnet 2>/dev/null); do
     onevnet create $vnet

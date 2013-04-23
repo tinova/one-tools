@@ -68,16 +68,20 @@ end
 conf[:template_location] = TEMPLATE_LOCATION
 
 @config = conf
-require "irb"
 
-if __FILE__ == $0
-  IRB.start(__FILE__)
-else
-  # check -e option
-  if /^-e$/ =~ $0
-    IRB.start(__FILE__)
-  else
-    IRB.setup(__FILE__)
-  end
-end
-
+version = ">= 0"
+gem 'pry', version
+load Gem.bin_path('pry', 'pry', version)
+#require "irb"
+#
+#if __FILE__ == $0
+#  IRB.start(__FILE__)
+#else
+#  # check -e option
+#  if /^-e$/ =~ $0
+#    IRB.start(__FILE__)
+#  else
+#    IRB.setup(__FILE__)
+#  end
+#end
+#

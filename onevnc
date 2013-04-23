@@ -1,8 +1,10 @@
 #!/bin/bash
 
-PORT=$(onevm show $1|grep PORT|grep -o '[0-9]\+')
-if [ -n "$PORT" ]; then
-    vncviewer localhost::$PORT
-else
-    echo no port found.
-fi
+onevm_show="$(onevm show $1)"
+PORT=$(echo "$onevm_show"|grep PORT|grep -o '[0-9]\+')
+HOST=$(echo "$onevm_show"|grep ^HOST|awk '{print $NF}')
+
+[ -z "$HOST" ] && echo "no host found" && exit 1
+[ -z "$PORT" ] && echo "no host found" && exit 1
+
+vncviewer $HOST::$PORT
