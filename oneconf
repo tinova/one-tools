@@ -40,8 +40,7 @@ conf = File.read(oned_conf)
 
 single_vals = {
     :manager_timer => 5,
-    :host_monitoring_interval => 10,
-    :vm_polling_interval => 10
+    :monitoring_interval => 10
 }
 
 single_vals.each do |k,v|
@@ -49,8 +48,10 @@ single_vals.each do |k,v|
     v = v.to_s
 
     if conf.match(/^#{k}/)
+        puts "replace #{k} = #{v}"
         conf.gsub!(/^#{k}.*$/,"#{k} = #{v}")
     else
+        puts "add #{k} = #{v}"
         conf << "\n#{k} = #{v}"
     end
 end
