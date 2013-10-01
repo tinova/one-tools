@@ -7,4 +7,4 @@ HOST=$(echo "$onevm_show"|grep ^HOST|awk '{print $NF}')
 [ -z "$HOST" ] && echo "no host found" && exit 1
 [ -z "$PORT" ] && echo "no host found" && exit 1
 
-vncviewer $HOST::$PORT
+${2:-vncviewer} $HOST::$PORT
