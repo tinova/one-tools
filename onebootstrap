@@ -111,6 +111,10 @@ def create_net(net)
     tpl_file.unlink
 end
 
+# Add SAFE_DIRS = / to the default datastore
+# ugly but works...
+system("EDITOR=\"sed -i '$ a\SAFE_DIRS=/'\" onedatastore update default")
+
 conf.each do |item|
     klass = item[:class]
     case klass
