@@ -1,7 +1,0 @@
-NAME      = ds_user
-DS_MAD    = fs
-TM_MAD    = shared
-
-SAFE_DIRS = "/"
-
-DEFAULT = YES

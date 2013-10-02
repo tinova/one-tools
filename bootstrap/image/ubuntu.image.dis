@@ -1,4 +1,0 @@
-NAME          = "ubuntu"
-PATH          = /run/media/jmelis/disk/vm-images/ubuntu-12.04-qcow2.img
-PUBLIC        = YES
-DRIVER =qcow2

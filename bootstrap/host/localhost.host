@@ -1,3 +1,0 @@
-IM=kvm
-VMM=kvm
-NET=dummy
