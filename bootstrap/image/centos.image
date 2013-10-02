@@ -1,0 +1,4 @@
+NAME = c6
+TYPE = OS
+PATH = "/home/jmelis/work/vm-images/c6-x86_64-20130910-1.qcow2"
+DRIVER = qcow2

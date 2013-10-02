@@ -1,0 +1,14 @@
+NAME   = ttylinux
+CPU    = 0.1
+MEMORY = 64
+
+DISK   = [ IMAGE = ttylinux, SIZE = 500 ]
+
+NIC    = [ NETWORK = "net_172" ]
+
+FEATURES=[ acpi="no" ]
+
+GRAPHICS = [
+    TYPE    = "vnc",
+    LISTEN  = "0.0.0.0"
+]

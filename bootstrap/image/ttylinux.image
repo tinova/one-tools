@@ -1,0 +1,3 @@
+NAME = ttylinux
+PATH = "/home/jmelis/work/git/one/files/templates/ttylinux/ttylinux.img"
+TYPE = OS
