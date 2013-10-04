@@ -34,15 +34,13 @@ end
 def create_image(image)
     banner(:image,image[:name])
 
+    image[:datastore] ||= "default"
+
     cmd = "oneimage create"
-
-    cmd << " --name #{image[:name]}" if image[:name]
-    cmd << " --type #{image[:type]}" if image[:type]
-    cmd << " --driver #{image[:driver]}" if image[:driver]
-    cmd << " --path #{image[:path]}" if image[:path]
-
-    ds = image[:ds] || "default"
-    cmd << " -d #{ds}"
+    image.each do |k,v|
+        next if k == :class
+        cmd << " --#{k} #{v}"
+    end
 
     run(cmd)
 end
@@ -50,36 +48,15 @@ end
 def create_host(host)
     banner(:host,host[:name])
 
-    run("onehost create #{host[:name]} -i #{host[:im]} -v #{host[:vmm]} -n #{host[:net]}")
-end
+    name = host.delete(:name)
 
-DATASTORE_TPL=<<EOF
-<% if ds[:name] %>
-NAME = <%= ds[:name] %>
-<% end %>
-<% if ds[:ds_mad] %>
-DS_MAD = <%= ds[:ds_mad] %>
-<% end %>
-<% if ds[:tm_mad] %>
-TM_MAD = <%= ds[:tm_mad] %>
-<% end %>
-<% if ds[:safe_dirs] %>
-SAFE_DIRS = <%= ds[:safe_dirs] %>
-<% end %>
-EOF
+    cmd = "onehost create #{name}"
+    host.each do |k,v|
+        next if k == :class
+        cmd << " --#{k} #{v}"
+    end
 
-def create_datastore(ds)
-    banner(:datastore,ds[:name])
-
-    tpl = ERB.new(DATASTORE_TPL,nil,'<>').result(binding)
-
-    tpl_file = Tempfile.new('onebootstrap')
-    tpl_file.write(tpl)
-    tpl_file.close
-
-    run("onedatastore create #{tpl_file.path}")
-
-    tpl_file.unlink
+    run(cmd)
 end
 
 NETWORK_TPL=<<EOF
@@ -111,6 +88,47 @@ def create_net(net)
     tpl_file.unlink
 end
 
+DATASTORE_TPL=<<EOF
+<% if ds[:name] %>
+NAME = <%= ds[:name] %>
+<% end %>
+<% if ds[:ds_mad] %>
+DS_MAD = <%= ds[:ds_mad] %>
+<% end %>
+<% if ds[:tm_mad] %>
+TM_MAD = <%= ds[:tm_mad] %>
+<% end %>
+<% if ds[:safe_dirs] %>
+SAFE_DIRS = <%= ds[:safe_dirs] %>
+<% end %>
+EOF
+
+def create_datastore(ds)
+    banner(:datastore,ds[:name])
+
+    tpl = ERB.new(DATASTORE_TPL,nil,'<>').result(binding)
+
+    tpl_file = Tempfile.new('onebootstrap')
+    tpl_file.write(tpl)
+    tpl_file.close
+
+    run("onedatastore create #{tpl_file.path}")
+
+    tpl_file.unlink
+end
+
+def create_template(template)
+    banner(:template,template[:name])
+
+    cmd = "onetemplate create"
+    template.each do |k,v|
+        next if k == :class
+        cmd << " --#{k} #{v}"
+    end
+
+    run(cmd)
+end
+
 # Add SAFE_DIRS = / to the default datastore
 # ugly but works...
 system("EDITOR=\"sed -i '$ a\SAFE_DIRS=/'\" onedatastore update default")
@@ -125,5 +143,6 @@ conf.each do |item|
     when :host then create_host(item)
     when :net then create_net(item)
     when :datastore then create_datastore(item)
+    when :template then create_template(item)
     end
 end

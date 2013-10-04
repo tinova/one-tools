@@ -5,19 +5,19 @@
 - :class: :host
   :name: localhost
   :im: kvm
-  :vmm: kvm
+  :vm: kvm
   :net: dummy
 - :class: :image
   :name: c6
   :type: OS
   :path: /home/jmelis/work/vm-images/c6-x86_64-20130910-1.qcow2
   :driver: qcow2
-  :ds: default
+  :datastore: default
 - :class: :image
   :name: ttylinux
   :type: OS
   :path: /home/jmelis/work/git/one/files/templates/ttylinux/ttylinux.img
-  :ds: default
+  :datastore: default
 - :class: :datastore
   :name: ds_user
   :ds_mad: fs
@@ -43,4 +43,4 @@
   :arch: x86_64
   :disk: c6
   :nic: net_172
-  :vnc: true
+  :vnc:
