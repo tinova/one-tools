@@ -44,3 +44,11 @@
   :disk: c6
   :nic: net_172
   :vnc:
+- :class: :template
+  :name: tty
+  :cpu: 0.1
+  :memory: 64
+  :arch: x86_64
+  :disk: ttylinux
+  :nic: net_172
+  :vnc:
