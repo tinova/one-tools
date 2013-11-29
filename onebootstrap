@@ -133,6 +133,10 @@ end
 # ugly but works...
 system("EDITOR=\"sed -i '$ a\SAFE_DIRS=/'\" onedatastore update default")
 
+# # This does not work because the public key contains a space
+# ssh_key_pub = File.read(File.expand_path('~/.ssh/id_dsa.pub'))
+# system("EDITOR=\"sed -i '$ a\SSH_PUBLIC_KEY=\\\"#{ssh_key_pub}\\\"'\" oneuser update 0")
+
 conf.each do |item|
     next if item[:enabled] == false
 
