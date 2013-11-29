@@ -142,11 +142,11 @@ conf.each do |item|
 
     klass = item[:class]
     case klass
-    when :user then create_user(item)
-    when :image then create_image(item)
-    when :host then create_host(item)
-    when :net then create_net(item)
+    when :user      then create_user(item)
+    when :image     then create_image(item)
+    when :host      then create_host(item)
+    when :net       then create_net(item)
     when :datastore then create_datastore(item)
-    when :template then create_template(item)
+    when :template  then create_template(item)
     end
 end
