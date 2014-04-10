@@ -31,7 +31,7 @@ require 'tempfile'
 require 'fileutils'
 require 'json'
 
-require 'OpenNebula'
+require 'opennebula'
 include OpenNebula
 
 require 'VirtualMachineOCCI'
