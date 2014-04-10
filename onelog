@@ -1,6 +1,12 @@
 #!/bin/bash
 
-PAGER=${PAGER:-less}
+if [ "$1" = "--tail" ]; then
+    shift
+    PAGER="tail -f"
+else
+    PAGER=${PAGER:-less}
+fi
+
 
 if [ -n "$ONE_LOCATION" ]; then
     if [ -n "$1" ]; then
