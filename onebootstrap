@@ -2,8 +2,8 @@
 
 require "yaml"
 require "tempfile"
-require "pp"
 require "erb"
+require "pp"
 
 DIR = File.dirname(__FILE__)
 
@@ -20,15 +20,19 @@ def banner(item,name)
 end
 
 def run(cmd)
-    out = `#{cmd}`
-    puts out
+    puts cmd
+    `#{cmd}`
+end
+
+def run_print(cmd)
+    puts run(cmd)
     puts
 end
 
 def create_user(user)
     banner(:user,user[:name])
 
-    run("oneuser create #{user[:name]} #{user[:pass]}")
+    run_print("oneuser create #{user[:name]} #{user[:pass]}")
 end
 
 def create_image(image)
@@ -42,7 +46,22 @@ def create_image(image)
         cmd << " --#{k} #{v}"
     end
 
-    run(cmd)
+    ds = image[:datastore]
+
+    cmd_ds_status = "onedatastore show #{ds}"
+    cmd_ds_status << "|grep ^TOTAL"
+    cmd_ds_status << "|awk '{print $3}'"
+    cmd_ds_status << "|tr -dc 0-9"
+
+    ds_status = nil
+
+    10.times {
+        ds_status = run(cmd_ds_status).strip.to_i
+        break if ds_status != 0
+        sleep 1
+    }
+
+    run_print(cmd)
 end
 
 def create_host(host)
@@ -56,63 +75,47 @@ def create_host(host)
         cmd << " --#{k} #{v}"
     end
 
-    run(cmd)
+    run_print(cmd)
 end
-
-NETWORK_TPL=<<EOF
-<% if net[:name] %>
-NAME = <%= net[:name] %>
-<% end %>
-<% if net[:name] %>
-TYPE = <%= net[:type] %>
-<% end %>
-<% if net[:name] %>
-BRIDGE = <%= net[:bridge] %>
-<% end %>
-<% net[:leases].each do |l| %>
-LEASES = [ IP = <%= l %> ]
-<% end %>
-EOF
 
 def create_net(net)
     banner(:net,net[:name])
 
-    tpl = ERB.new(NETWORK_TPL,nil,'<>').result(binding)
+    leases = net.delete(:leases) || []
+
+    tpl = ""
+    net.each do |k,v|
+        next if k == :class
+        tpl << "#{k.upcase} = \"#{v}\"\n"
+    end
+
+    leases.each do |lease|
+        tpl << "LEASES = [ IP = #{lease}]\n"
+    end
 
     tpl_file = Tempfile.new('onebootstrap')
     tpl_file.write(tpl)
     tpl_file.close
 
-    run("onevnet create #{tpl_file.path}")
+    run_print("onevnet create #{tpl_file.path}")
 
     tpl_file.unlink
 end
 
-DATASTORE_TPL=<<EOF
-<% if ds[:name] %>
-NAME = <%= ds[:name] %>
-<% end %>
-<% if ds[:ds_mad] %>
-DS_MAD = <%= ds[:ds_mad] %>
-<% end %>
-<% if ds[:tm_mad] %>
-TM_MAD = <%= ds[:tm_mad] %>
-<% end %>
-<% if ds[:safe_dirs] %>
-SAFE_DIRS = <%= ds[:safe_dirs] %>
-<% end %>
-EOF
-
 def create_datastore(ds)
     banner(:datastore,ds[:name])
 
-    tpl = ERB.new(DATASTORE_TPL,nil,'<>').result(binding)
+    tpl = ""
+    ds.each do |k,v|
+        next if k == :class
+        tpl << "#{k.upcase} = \"#{v}\"\n"
+    end
 
     tpl_file = Tempfile.new('onebootstrap')
     tpl_file.write(tpl)
     tpl_file.close
 
-    run("onedatastore create #{tpl_file.path}")
+    run_print("onedatastore create #{tpl_file.path}")
 
     tpl_file.unlink
 end
@@ -126,7 +129,7 @@ def create_template(template)
         cmd << " --#{k} #{v}"
     end
 
-    run(cmd)
+    run_print(cmd)
 end
 
 # Add SAFE_DIRS = / to the default datastore
@@ -137,7 +140,21 @@ system("EDITOR=\"sed -i '$ a\SAFE_DIRS=/'\" onedatastore update default")
 # ssh_key_pub = File.read(File.expand_path('~/.ssh/id_dsa.pub'))
 # system("EDITOR=\"sed -i '$ a\SSH_PUBLIC_KEY=\\\"#{ssh_key_pub}\\\"'\" oneuser update 0")
 
-conf.each do |item|
+conf.sort{|a,b|
+    case a[:class]
+    when :datastore then x = -1
+    when :image then x = 1
+    else x = 0
+    end
+
+    case b[:class]
+    when :datastore then y = -1
+    when :image then y = 1
+    else y = 0
+    end
+
+    x<=>y
+}.each do |item|
     next if item[:enabled] == false
 
     klass = item[:class]

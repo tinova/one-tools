@@ -1,41 +1,50 @@
 ---
-- :class: :user
-  :name: jmelis
-  :pass: "-"
+
+# - :class: :user
+#   :name: jmelis
+#   :pass: "-"
+
 - :class: :host
   :name: localhost
   :im: kvm
   :vm: kvm
   :net: dummy
+
 - :class: :image
   :name: c6
   :type: OS
-  :path: /home/jmelis/work/vm-images/c6-x86_64-20130910-1.qcow2
+  :path: /home/jmelis/work/vm-images/CentOS65.qcow2
   :driver: qcow2
   :datastore: default
+
 - :class: :image
   :name: ttylinux
   :type: OS
   :path: /home/jmelis/work/git/one/files/templates/ttylinux/ttylinux.img
   :datastore: default
+
 - :class: :datastore
   :name: ds_user
   :ds_mad: fs
   :tm_mad: shared
   :safe_dirs: /
+
 - :class: :net
   :name: net_172
   :type: fixed
   :bridge: br0
+  :dns: 172.16.77.1
   :leases:
-    - 172.16.0.200
-    - 172.16.0.201
-    - 172.16.0.202
-    - 172.16.0.203
-    - 172.16.0.204
-    - 172.16.0.205
-    - 172.16.0.206
-    - 172.16.0.207
+    - 172.16.77.200
+    - 172.16.77.201
+    - 172.16.77.202
+    - 172.16.77.203
+    - 172.16.77.204
+    - 172.16.77.205
+    - 172.16.77.206
+    - 172.16.77.207
+
+
 - :class: :template
   :name: c6
   :cpu: 1
@@ -44,6 +53,9 @@
   :disk: c6
   :nic: net_172
   :vnc:
+  :ssh:
+  :net_context:
+
 - :class: :template
   :name: tty
   :cpu: 0.1
