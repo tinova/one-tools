@@ -5,6 +5,6 @@ PORT=$(echo "$onevm_show"|grep PORT|grep -o '[0-9]\+')
 HOST=$(echo "$onevm_show"|grep ^HOST|awk '{print $NF}')
 
 [ -z "$HOST" ] && echo "no host found" && exit 1
-[ -z "$PORT" ] && echo "no host found" && exit 1
+[ -z "$PORT" ] && echo "no port found" && exit 1
 
 ${2:-vncviewer} $HOST::$PORT
