@@ -86,7 +86,7 @@ def create_net(net)
     tpl = ""
     net.each do |k,v|
         next if k == :class
-        tpl << "#{k.upcase} = \"#{v}\"\n"
+        tpl << "#{k.to_s.upcase} = \"#{v}\"\n"
     end
 
     leases.each do |lease|
@@ -108,7 +108,7 @@ def create_datastore(ds)
     tpl = ""
     ds.each do |k,v|
         next if k == :class
-        tpl << "#{k.upcase} = \"#{v}\"\n"
+        tpl << "#{k.to_s.upcase} = \"#{v}\"\n"
     end
 
     tpl_file = Tempfile.new('onebootstrap')
