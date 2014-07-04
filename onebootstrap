@@ -81,6 +81,7 @@ end
 def create_net(net)
     banner(:net,net[:name])
 
+    ar_pool = net.delete(:ar) || []
     leases = net.delete(:leases) || []
 
     tpl = ""
@@ -91,6 +92,20 @@ def create_net(net)
 
     leases.each do |lease|
         tpl << "LEASES = [ IP = #{lease}]\n"
+    end
+
+    ar_pool.each do |ar|
+        tpl << "AR = [\n"
+
+        l = ar.length
+        i = 0
+        ar.each do |k,v|
+            i+=1
+            lastchar = i < ar.length ? ',' : ''
+            tpl << "\t#{k.to_s.upcase} = \"#{v}\"#{lastchar}\n"
+        end
+
+        tpl << "]\n"
     end
 
     tpl_file = Tempfile.new('onebootstrap')
