@@ -114,7 +114,7 @@ def create_net(net)
 
     run_print("onevnet create #{tpl_file.path}")
 
-    tpl_file.unlink
+    # tpl_file.unlink
 end
 
 def create_datastore(ds)
@@ -132,7 +132,7 @@ def create_datastore(ds)
 
     run_print("onedatastore create #{tpl_file.path}")
 
-    tpl_file.unlink
+    # tpl_file.unlink
 end
 
 def create_template(template)
