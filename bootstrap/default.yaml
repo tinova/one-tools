@@ -31,12 +31,12 @@
 
 - :class: :net
   :name: net_172
-  :type: ip4
   :bridge: br0
   :dns: 8.8.8.8 8.8.4.4
   :ar:
     - :ip: 172.16.77.200
       :size: 8
+      :type: ip4
 
 - :class: :template
   :name: c6
