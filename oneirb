@@ -7,20 +7,24 @@ if !ONE_LOCATION
     VAR_LOCATION = "/var/lib/one"
     TEMPLATE_LOCATION="/etc/one/occi_templates"
     CONFIGURATION_FILE = "/etc/one/occi-server.conf"
+    LIB_LOCATION = "/usr/lib/one"
+    ETC_LOCATION = "/etc/one"
 else
     RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby"
     VAR_LOCATION = ONE_LOCATION+"/var"
     TEMPLATE_LOCATION=ONE_LOCATION+"/etc/occi_templates"
     CONFIGURATION_FILE = ONE_LOCATION+"/etc/occi-server.conf"
+    LIB_LOCATION = ONE_LOCATION+"/lib"
+    ETC_LOCATION = ONE_LOCATION + "/etc"
 end
 
 OCCI_AUTH = VAR_LOCATION + "/.one/occi_auth"
+ONEGATE_AUTH = VAR_LOCATION + "/.one/onegate_auth"
 
 $: << RUBY_LIB_LOCATION
 $: << RUBY_LIB_LOCATION+"/cloud/occi"
 $: << RUBY_LIB_LOCATION+"/cloud" # For the Repository Manager
-
-
+$: << LIB_LOCATION+'/oneflow/lib'
 
 ################################################
 # Required libraries
@@ -32,6 +36,11 @@ require 'fileutils'
 require 'json'
 
 require 'opennebula'
+require 'opennebula/oneflow_client'
+require 'CloudAuth'
+require 'CloudServer'
+require 'models'
+require 'log'
 include OpenNebula
 
 require 'VirtualMachineOCCI'
