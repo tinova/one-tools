@@ -15,12 +15,15 @@
   :type: OS
   :path: /home/jmelis/work/vm-images/CentOS65.qcow2
   :driver: qcow2
+  :prefix: vd
   :datastore: default
 
 - :class: :image
   :name: ttylinux
   :type: OS
-  :path: /home/jmelis/work/git/one/files/templates/ttylinux/ttylinux.img
+  :path: /home/jmelis/work/vm-images/ttyvd-context.v2.qcow2
+  :prefix: vd
+  :driver: qcow2
   :datastore: default
 
 - :class: :datastore
@@ -33,6 +36,7 @@
   :name: net_172
   :bridge: br0
   :dns: 8.8.8.8 8.8.4.4
+  :model: virtio
   :ar:
     - :ip: 172.16.77.200
       :size: 8
