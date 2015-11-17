@@ -156,11 +156,11 @@ private
     def add_value(conf, key, value)
         if conf[key]
             if !conf[key].kind_of?(Array)
-                conf[key]=[conf[key]]
+                conf[key] = [conf[key]]
             end
-            conf[key]<<value
+            conf[key] << value
         else
-            conf[key]=value
+            conf[key] = value
         end
     end
 
@@ -228,10 +228,10 @@ class BSHost < BS
     def create
         h = Host.new(Host.build_xml, CLIENT)
 
-        args = [@resource[:options][:name],
-                @resource[:options][:im],
-                @resource[:options][:vmm],
-                @resource[:options][:vnm]]
+        args = [@resource[:name],
+                @resource[:im],
+                @resource[:vmm],
+                @resource[:vnm]]
 
         if (cluster_id = @resource[:options][:cluster_id])
             args << cluster_id
