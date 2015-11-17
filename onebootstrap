@@ -5,9 +5,38 @@ require "tempfile"
 require "erb"
 require "pp"
 
-DIR = File.dirname(__FILE__)
+DIR = File.dirname(File.realpath(__FILE__))
 
-yaml_file = ARGV[0] || File.join(DIR,"bootstrap","default.yaml")
+################################################################################
+# Load OpenNebula
+################################################################################
+
+ONE_LOCATION=ENV["ONE_LOCATION"]
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION = "/usr/lib/one/ruby"
+    VAR_LOCATION      = "/var/lib/one"
+    LIB_LOCATION      = "/usr/lib/one"
+    ETC_LOCATION      = "/etc/one"
+else
+    RUBY_LIB_LOCATION = ONE_LOCATION + "/lib/ruby"
+    VAR_LOCATION      = ONE_LOCATION + "/var"
+    LIB_LOCATION      = ONE_LOCATION + "/lib"
+    ETC_LOCATION      = ONE_LOCATION +"/etc"
+end
+
+$: << RUBY_LIB_LOCATION
+
+require 'opennebula'
+include OpenNebula
+
+CLIENT = Client.new
+
+################################################################################
+# Read Configuration
+################################################################################
+
+yaml_file = ARGV[0] || File.join(DIR, "bootstrap", "default.yaml")
 
 begin
     conf = YAML.load_file(yaml_file)
@@ -15,170 +44,248 @@ rescue
     STDERR.puts "'#{yaml_file}' is not a valid yaml file."
 end
 
-def banner(item,name)
-    puts "Create #{item.to_s.capitalize} '#{name}':"
+################################################################################
+# Helper
+################################################################################
+
+def error(e)
+    STDERR.puts e.message
+    exit 1
 end
 
-def run(cmd)
-    puts cmd
-    `#{cmd}`
-end
+###############################################################################
+# The TemplateParser Class parses a VM template file and builds a hash with
+# the info. It does not check syntax.
+###############################################################################
+class TemplateParser
+    ##########################################################################
+    # Patterns to parse the template File
+    ##########################################################################
 
-def run_print(cmd)
-    puts run(cmd)
-    puts
-end
+    NAME_REG     =/[\w\d_-]+/
+    VARIABLE_REG =/\s*(#{NAME_REG})\s*=\s*/
 
-def create_user(user)
-    banner(:user,user[:name])
+    SIMPLE_VARIABLE_REG =/#{VARIABLE_REG}([^\[]+?)(#.*)?/
+    SINGLE_VARIABLE_REG =/^#{SIMPLE_VARIABLE_REG}$/
+    ARRAY_VARIABLE_REG  =/^#{VARIABLE_REG}\[(.*?)\]/m
 
-    run_print("oneuser create #{user[:name]} #{user[:pass]}")
-end
+    ##########################################################################
+    ##########################################################################
 
-def create_image(image)
-    banner(:image,image[:name])
-
-    image[:datastore] ||= "default"
-
-    cmd = "oneimage create"
-    image.each do |k,v|
-        next if k == :class
-        cmd << " --#{k} #{v}"
+    def initialize(template_string)
+        @conf=parse_conf(template_string)
     end
 
-    ds = image[:datastore]
+    def add_configuration_value(key,value)
+        add_value(@conf,key,value)
+    end
 
-    cmd_ds_status = "onedatastore show #{ds}"
-    cmd_ds_status << "|grep ^TOTAL"
-    cmd_ds_status << "|awk '{print $3}'"
-    cmd_ds_status << "|tr -dc 0-9"
+    def [](key)
+        @conf[key.to_s.upcase]
+    end
 
-    ds_status = nil
+    def hash
+        @conf
+    end
 
-    10.times {
-        ds_status = run(cmd_ds_status).strip.to_i
-        break if ds_status != 0
-        sleep 1
-    }
+    def self.template_like_str(attributes, indent=true)
+         if indent
+             ind_enter="\n"
+             ind_tab='  '
+         else
+             ind_enter=''
+             ind_tab=' '
+         end
 
-    run_print(cmd)
+         str=attributes.collect do |key, value|
+             if value
+                 str_line=""
+                 if value.class==Array
+
+                     value.each do |value2|
+                         str_line << key.to_s.upcase << "=[" << ind_enter
+                         if value2 && value2.class==Hash
+                             str_line << value2.collect do |key3, value3|
+                                 str = ind_tab + key3.to_s.upcase + "="
+                                 str += "\"#{value3.to_s}\"" if value3
+                                 str
+                             end.compact.join(",\n")
+                         end
+                         str_line << "\n]\n"
+                     end
+
+                 elsif value.class==Hash
+                     str_line << key.to_s.upcase << "=[" << ind_enter
+
+                     str_line << value.collect do |key3, value3|
+                         str = ind_tab + key3.to_s.upcase + "="
+                         str += "\"#{value3.to_s}\"" if value3
+                         str
+                     end.compact.join(",\n")
+
+                     str_line << "\n]\n"
+
+                 else
+                     str_line<<key.to_s.upcase << "=" << "\"#{value.to_s}\""
+                 end
+                 str_line
+             end
+         end.compact.join("\n")
+
+         str
+     end
+
+    ##########################################################################
+    ##########################################################################
+
+private
+
+
+    def san_key(key)
+        key.strip.downcase.to_sym
+    end
+
+    def san_value(value)
+        value.strip.gsub(/"/, '') if value
+    end
+
+    #
+    #
+    #
+    def add_value(conf, key, value)
+        if conf[key]
+            if !conf[key].kind_of?(Array)
+                conf[key]=[conf[key]]
+            end
+            conf[key]<<value
+        else
+            conf[key]=value
+        end
+    end
+
+    #
+    # Parses the configuration file and
+    # creates the configuration hash
+    #
+    def parse_conf(template_string)
+        conf=Hash.new
+
+        template_string.scan(SINGLE_VARIABLE_REG) {|m|
+            key=san_key(m[0])
+            value=san_value(m[1])
+
+            add_value(conf, key, value)
+        }
+
+        template_string.scan(ARRAY_VARIABLE_REG) {|m|
+            master_key=san_key(m[0])
+
+            pieces=m[1].split(',')
+
+            vars=Hash.new
+            pieces.each {|p|
+                key, value=p.split('=')
+                vars[san_key(key)]=san_value(value)
+            }
+
+            add_value(conf, master_key, vars)
+        }
+
+        conf
+    end
 end
 
-def create_host(host)
-    banner(:host,host[:name])
+################################################################################
+# Boostrap Classes
+################################################################################
 
-    name = host.delete(:name)
-
-    cmd = "onehost create #{name}"
-    host.each do |k,v|
-        next if k == :class
-        cmd << " --#{k} #{v}"
+def bsresource(resource)
+    begin
+        {
+          "host"     => BSHost,
+          "image"    => BSImage,
+          "template" => BSTemplate,
+          "net"      => BSNet
+        }[resource[:type]].new(resource)
+    rescue
+        STDERR.puts "Resource '#{resource[:type]}' not supported."
+        exit 1
     end
-
-    run_print(cmd)
 end
 
-def create_net(net)
-    banner(:net,net[:name])
-
-    ar_pool = net.delete(:ar) || []
-    leases = net.delete(:leases) || []
-
-    tpl = ""
-    net.each do |k,v|
-        next if k == :class
-        tpl << "#{k.to_s.upcase} = \"#{v}\"\n"
+class BS
+    def initialize(resource)
+        @resource = resource
     end
 
-    leases.each do |lease|
-        tpl << "LEASES = [ IP = #{lease}]\n"
+    def do!
+        send(@resource[:action])
     end
+end
 
-    ar_pool.each do |ar|
-        tpl << "AR = [\n"
+class BSHost < BS
+    def create
+        h = Host.new(Host.build_xml, CLIENT)
 
-        l = ar.length
-        i = 0
-        ar.each do |k,v|
-            i+=1
-            lastchar = i < ar.length ? ',' : ''
-            tpl << "\t#{k.to_s.upcase} = \"#{v}\"#{lastchar}\n"
+        args = [@resource[:options][:name],
+                @resource[:options][:im],
+                @resource[:options][:vmm],
+                @resource[:options][:vnm]]
+
+        if (cluster_id = @resource[:options][:cluster_id])
+            args << cluster_id
         end
 
-        tpl << "]\n"
+        rc = h.allocate(*args)
+
+       error(rc) if OpenNebula.is_error?(rc)
     end
-
-    tpl_file = Tempfile.new('onebootstrap')
-    tpl_file.write(tpl)
-    tpl_file.close
-
-    run_print("onevnet create #{tpl_file.path}")
-
-    # tpl_file.unlink
 end
 
-def create_datastore(ds)
-    banner(:datastore,ds[:name])
+class BSImage < BS
+    def create
+        image = Image.new(Image.build_xml, CLIENT)
 
-    tpl = ""
-    ds.each do |k,v|
-        next if k == :class
-        tpl << "#{k.to_s.upcase} = \"#{v}\"\n"
+        template = TemplateParser.template_like_str(@resource[:template])
+
+        rc = image.allocate(template, @resource[:ds_id])
+        error(rc) if OpenNebula.is_error?(rc)
     end
-
-    tpl_file = Tempfile.new('onebootstrap')
-    tpl_file.write(tpl)
-    tpl_file.close
-
-    run_print("onedatastore create #{tpl_file.path}")
-
-    # tpl_file.unlink
 end
 
-def create_template(template)
-    banner(:template,template[:name])
+class BSNet < BS
+    def create
+        net = VirtualNetwork.new(VirtualNetwork.build_xml, CLIENT)
 
-    cmd = "onetemplate create"
-    template.each do |k,v|
-        next if k == :class
-        cmd << " --#{k} #{v}"
+        template = TemplateParser.template_like_str(@resource[:template])
+
+        args = [template]
+
+        if (cluster_id = @resource[:options][:cluster_id] rescue nil)
+            args << cluster_id
+        end
+
+        rc = net.allocate(*args)
+        error(rc) if OpenNebula.is_error?(rc)
     end
-
-    run_print(cmd)
 end
 
-# Add SAFE_DIRS = / to the default datastore
-# ugly but works...
-system("EDITOR=\"sed -i '$ a\SAFE_DIRS=/'\" onedatastore update default")
+class BSTemplate < BS
+    def create
+        the_template = Template.new(Template.build_xml, CLIENT)
 
-# # This does not work because the public key contains a space
-# ssh_key_pub = File.read(File.expand_path('~/.ssh/id_dsa.pub'))
-# system("EDITOR=\"sed -i '$ a\SSH_PUBLIC_KEY=\\\"#{ssh_key_pub}\\\"'\" oneuser update 0")
+        template = TemplateParser.template_like_str(@resource[:template])
 
-conf.sort{|a,b|
-    case a[:class]
-    when :datastore then x = -1
-    when :image then x = 1
-    else x = 0
+        rc = the_template.allocate(template)
+        error(rc) if OpenNebula.is_error?(rc)
     end
+end
 
-    case b[:class]
-    when :datastore then y = -1
-    when :image then y = 1
-    else y = 0
-    end
+################################################################################
+# Create Resources
+################################################################################
 
-    x<=>y
-}.each do |item|
-    next if item[:enabled] == false
-
-    klass = item[:class]
-    case klass
-    when :user      then create_user(item)
-    when :image     then create_image(item)
-    when :host      then create_host(item)
-    when :net       then create_net(item)
-    when :datastore then create_datastore(item)
-    when :template  then create_template(item)
-    end
+conf.each do |resource|
+    r = bsresource(resource)
+    r.do!
 end

@@ -1,63 +1,77 @@
 ---
 
-# - :class: :user
-#   :name: jmelis
-#   :pass: "-"
-
-- :class: :host
+- :action: create
+  :type: host
   :name: localhost
   :im: kvm
-  :vm: kvm
-  :net: dummy
+  :vmm: kvm
+  :vnm: dummy
 
-- :class: :image
-  :name: c6
-  :type: OS
-  :path: /home/jmelis/work/vm-images/CentOS65.qcow2
-  :driver: qcow2
-  :prefix: vd
-  :datastore: default
+- :action: create
+  :type: image
+  :ds_id: 1
+  :template:
+    :name: c7
+    :type: OS
+    :path: /home/jmelis/work/vm-images/centos-7.qcow2
+    :driver: qcow2
+    :prefix: vd
 
-- :class: :image
-  :name: ttylinux
-  :type: OS
-  :path: /home/jmelis/work/vm-images/ttyvd-context.v2.qcow2
-  :prefix: vd
-  :driver: qcow2
-  :datastore: default
+- :action: create
+  :type: image
+  :ds_id: 1
+  :template:
+    :name: ttylinux
+    :type: OS
+    :path: /home/jmelis/work/vm-images/ttyvd-context.qcow2
+    :prefix: vd
+    :driver: qcow2
 
-- :class: :datastore
-  :name: ds_user
-  :ds_mad: fs
-  :tm_mad: shared
-  :safe_dirs: /
+- :action: create
+  :type: net
+  :template:
+    :name: private
+    :bridge: br0
+    :dns: 10.3.4.1
+    :model: virtio
+    :ar:
+      - ip: 10.3.4.20
+        :size: 235
+        :type: IP4
 
-- :class: :net
-  :name: net_172
-  :bridge: br0
-  :dns: 8.8.8.8 8.8.4.4
-  :model: virtio
-  :ar:
-    - :ip: 172.16.77.200
-      :size: 8
-      :type: ip4
+- :action: create
+  :type: template
+  :template:
+    :name: c7
+    :cpu: 1
+    :memory: 512
+    :arch: x86_64
+    :disk:
+      :image: c7
+    :nic:
+      :network: private
+    :graphics:
+      :type: vnc
+      :listen: 0.0.0.0
+    :context:
+      :ssh_public_key: $USER[SSH_PUBLIC_KEY]
+      :network: YES
 
-- :class: :template
-  :name: c6
-  :cpu: 1
-  :memory: 512
-  :arch: x86_64
-  :disk: c6
-  :nic: net_172
-  :vnc:
-  :ssh:
-  :net_context:
+- :action: create
+  :type: template
+  :template:
+    :name: tty
+    :cpu: 0.1
+    :memory: 64
+    :arch: x86_64
+    :disk:
+      :image: ttylinux
+    :nic:
+      :network: private
+    :context:
+      :ssh_public_key: $USER[SSH_PUBLIC_KEY]
+      :network: YES
+    :graphics:
+      :type: vnc
+      :listen: 0.0.0.0
 
-- :class: :template
-  :name: tty
-  :cpu: 0.1
-  :memory: 64
-  :arch: x86_64
-  :disk: ttylinux
-  :nic: net_172
-  :vnc:
