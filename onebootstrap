@@ -233,7 +233,7 @@ class BSHost < BS
                 @resource[:vmm],
                 @resource[:vnm]]
 
-        if (cluster_id = @resource[:options][:cluster_id])
+        if (cluster_id = @resource[:cluster_id])
             args << cluster_id
         end
 
