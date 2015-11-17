@@ -5,6 +5,6 @@ shift
 
 IP=$(onevm show $VM -x|grep '<IP>'|grep -o '[0-9.]\+'|head -n1)
 
-ssh "$IP" -l root "$*"
+ssh "$IP" -l root "$@"
 
 
