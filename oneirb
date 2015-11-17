@@ -18,6 +18,7 @@ ONEGATE_AUTH = VAR_LOCATION + "/.one/onegate_auth"
 
 $: << RUBY_LIB_LOCATION
 $: << RUBY_LIB_LOCATION+"/cloud" # For the Repository Manager
+$: << RUBY_LIB_LOCATION+"/cli" # For the Repository Manager
 $: << LIB_LOCATION+'/oneflow/lib'
 
 ################################################
@@ -31,6 +32,10 @@ require 'json'
 
 require 'opennebula'
 require 'opennebula/oneflow_client'
+
+require 'one_helper'
+require 'one_helper/onevm_helper'
+
 require 'CloudAuth'
 require 'CloudServer'
 require 'models'
@@ -42,7 +47,7 @@ require 'pp'
 if ENV['ONE_AUTH']
     authfile = ENV['ONE_AUTH']
 else
-    authfile = "ENV['HOME']/.one/one_auth"
+    authfile = "#{ENV['HOME']}/.one/one_auth"
 end
 
 # OpenNebula credentials
