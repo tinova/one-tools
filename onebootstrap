@@ -62,6 +62,7 @@ def error(e)
     else
         STDERR.puts e.message
     end
+    exit 1
 end
 
 def log(e, level=nil)
