@@ -317,7 +317,7 @@ class BSNet < BS
 
         args = [template]
 
-        if (cluster_id = @resource[:options][:cluster_id] rescue nil)
+        if (cluster_id = @resource[:cluster_id] rescue nil)
             args << cluster_id
         end
 
@@ -334,7 +334,7 @@ class BSDatastore < BS
 
         args = [template]
 
-        if (cluster_id = @resource[:options][:cluster_id] rescue nil)
+        if (cluster_id = @resource[:cluster_id] rescue nil)
             args << cluster_id
         end
 
