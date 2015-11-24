@@ -11,6 +11,7 @@
   :im: kvm
   :vmm: kvm
   :vnm: dummy
+  # :cluster_id:
 
 - :action: create
   :type: image
@@ -34,6 +35,7 @@
 
 - :action: create
   :type: net
+  # :cluster_id:
   :template:
     :name: private
     :bridge: br0
