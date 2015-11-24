@@ -325,6 +325,23 @@ class BSNet < BS
     end
 end
 
+class BSDatastore < BS
+    def create
+        ds = Datastore.new(Datastore.build_xml, CLIENT)
+
+        template = TemplateParser.template_like_str(@resource[:template])
+
+        args = [template]
+
+        if (cluster_id = @resource[:options][:cluster_id] rescue nil)
+            args << cluster_id
+        end
+
+        rc = ds.allocate(*args)
+        error(rc) if OpenNebula.is_error?(rc)
+    end
+end
+
 class BSTemplate < BS
     def create
         the_template = Template.new(Template.build_xml, CLIENT)
@@ -352,11 +369,12 @@ class BSUser < BS
 end
 
 BSRESOURCES = {
-    "host"     => {:bs => BSHost, :pool => HostPool},
-    "image"    => {:bs => BSImage, :pool => ImagePool},
-    "template" => {:bs => BSTemplate, :pool => TemplatePool},
-    "net"      => {:bs => BSNet, :pool => VirtualNetworkPool},
-    "user"     => {:bs => BSUser, :pool => UserPool}
+    "host"      => {:bs => BSHost, :pool => HostPool},
+    "image"     => {:bs => BSImage, :pool => ImagePool},
+    "template"  => {:bs => BSTemplate, :pool => TemplatePool},
+    "net"       => {:bs => BSNet, :pool => VirtualNetworkPool},
+    "datastore" => {:bs => BSDatastore, :pool => DatastorePool},
+    "user"      => {:bs => BSUser, :pool => UserPool}
 }
 
 def bsresource(resource)
