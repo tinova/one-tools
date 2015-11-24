@@ -234,6 +234,18 @@ end
 
 
 class BS
+    def self.factory(resource)
+        resources = {
+            "host"      => BSHost,
+            "image"     => BSImage,
+            "template"  => BSTemplate,
+            "net"       => BSNet,
+            "datastore" => BSDatastore,
+            "user"      => BSUser
+        }
+        return resources[resource[:type]].new(resource)
+    end
+
     def initialize(resource)
         @resource = resource
     end
@@ -249,39 +261,68 @@ class BS
 
         case action = @resource[:action].to_sym
         when :create
-            if !exists?
+            if id.nil?
                 log("> Creating", :ok)
                 send(action)
             else
                 log("> Skipping: resource exists", :warn)
+            end
+        when :update
+            if !id.nil?
+                log("> Updating", :ok)
+                update
+            else
+                log("> Skipping: does not exist", :warn)
             end
         else
             error("Unknown action: '#{action}'.")
         end
     end
 
-    def exists?
-        name = @resource[:name] || @resource[:template][:name] rescue nil
-        if name.nil?
-            error("Field 'NAME' missing from resource")
-            return true
+    def update
+        resource_class = self.class.class_variable_get(:@@resource_class)
+
+        append = @resource[:append] || true
+
+        r = resource_class.new_with_id(id, CLIENT)
+
+        template = TemplateParser.template_like_str(@resource[:template])
+
+        rc = r.update(template, append)
+        error(rc) if OpenNebula.is_error?(rc)
+    end
+
+    def id
+        if (id = @resource[:id])
+            return id
         end
 
-        pool = BSRESOURCES[@resource[:type]][:pool].new(CLIENT)
+        name = @resource[:name] || @resource[:template][:name] rescue nil
+        if name.nil?
+            error("Fields 'NAME' or 'ID' are required")
+            return nil
+        end
+
+        pool_class = self.class.class_variable_get(:@@pool_class)
+
+        pool = pool_class.new(CLIENT)
         rc = pool.info
         error(rc) if OpenNebula.is_error?(rc)
 
         pool.each do |e|
-            return true if e["NAME"] == name
+            return e["ID"] if e["NAME"] == name
         end
 
-        return false
+        return nil
     end
 end
 
 class BSHost < BS
+    @@resource_class = Host
+    @@pool_class     = HostPool
+
     def create
-        h = Host.new(Host.build_xml, CLIENT)
+        h = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         args = [@resource[:name],
                 @resource[:im],
@@ -299,8 +340,11 @@ class BSHost < BS
 end
 
 class BSImage < BS
+    @@resource_class = Image
+    @@pool_class     = ImagePool
+
     def create
-        image = Image.new(Image.build_xml, CLIENT)
+        image = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         template = TemplateParser.template_like_str(@resource[:template])
 
@@ -310,8 +354,11 @@ class BSImage < BS
 end
 
 class BSNet < BS
+    @@resource_class = VirtualNetwork
+    @@pool_class     = VirtualNetworkPool
+
     def create
-        net = VirtualNetwork.new(VirtualNetwork.build_xml, CLIENT)
+        net = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         template = TemplateParser.template_like_str(@resource[:template])
 
@@ -327,8 +374,11 @@ class BSNet < BS
 end
 
 class BSDatastore < BS
+    @@resource_class = Datastore
+    @@pool_class     = DatastorePool
+
     def create
-        ds = Datastore.new(Datastore.build_xml, CLIENT)
+        ds = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         template = TemplateParser.template_like_str(@resource[:template])
 
@@ -344,8 +394,11 @@ class BSDatastore < BS
 end
 
 class BSTemplate < BS
+    @@resource_class = Template
+    @@pool_class     = TemplatePool
+
     def create
-        the_template = Template.new(Template.build_xml, CLIENT)
+        the_template = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         template = TemplateParser.template_like_str(@resource[:template])
 
@@ -355,8 +408,11 @@ class BSTemplate < BS
 end
 
 class BSUser < BS
+    @@resource_class = User
+    @@pool_class     = UserPool
+
     def create
-        user = User.new(User.build_xml, CLIENT)
+        user = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         args = [@resource[:name], @resource[:password]]
 
@@ -369,28 +425,11 @@ class BSUser < BS
     end
 end
 
-BSRESOURCES = {
-    "host"      => {:bs => BSHost, :pool => HostPool},
-    "image"     => {:bs => BSImage, :pool => ImagePool},
-    "template"  => {:bs => BSTemplate, :pool => TemplatePool},
-    "net"       => {:bs => BSNet, :pool => VirtualNetworkPool},
-    "datastore" => {:bs => BSDatastore, :pool => DatastorePool},
-    "user"      => {:bs => BSUser, :pool => UserPool}
-}
-
-def bsresource(resource)
-    begin
-        BSRESOURCES[resource[:type]][:bs].new(resource)
-    rescue
-        error("Resource '#{resource[:type]}' not supported.")
-    end
-end
-
 ################################################################################
 # Create Resources
 ################################################################################
 
 conf.each do |resource|
-    r = bsresource(resource)
+    r = BS.factory(resource)
     r.do!
 end
