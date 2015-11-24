@@ -1,4 +1,9 @@
 ---
+- :action: create
+  :type: user
+  :name: jaime
+  :password: jaime
+  # :driver:
 
 - :action: create
   :type: host

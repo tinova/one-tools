@@ -5,6 +5,13 @@ require "tempfile"
 require "erb"
 require "pp"
 
+begin
+    require "colored"
+    COLORED=true
+rescue
+    COLORED=false
+end
+
 DIR = File.dirname(File.realpath(__FILE__))
 
 ################################################################################
@@ -49,8 +56,32 @@ end
 ################################################################################
 
 def error(e)
-    STDERR.puts e.message
-    exit 1
+    if e.instance_of?(String)
+        STDERR.puts e
+    else
+        STDERR.puts e.message
+    end
+end
+
+def log(e, level=nil)
+    if COLORED
+        m = case level
+        when :ok
+            e.green
+        when :warn
+            e.cyan
+        when :info
+            e.blue
+        when :error
+            e.red
+        else
+            e
+        end
+    else
+        m = e
+    end
+
+    puts m
 end
 
 ###############################################################################
@@ -200,27 +231,50 @@ end
 # Boostrap Classes
 ################################################################################
 
-def bsresource(resource)
-    begin
-        {
-          "host"     => BSHost,
-          "image"    => BSImage,
-          "template" => BSTemplate,
-          "net"      => BSNet
-        }[resource[:type]].new(resource)
-    rescue
-        STDERR.puts "Resource '#{resource[:type]}' not supported."
-        exit 1
-    end
-end
 
 class BS
     def initialize(resource)
         @resource = resource
     end
 
+    def to_s
+        name = @resource[:name] || @resource[:template][:name] rescue nil
+
+        "@type:#{@resource[:type]}/@name:#{name}"
+    end
+
     def do!
-        send(@resource[:action])
+        log("* #{self}", :info)
+
+        case action = @resource[:action].to_sym
+        when :create
+            if !exists?
+                log("> Creating", :ok)
+                send(action)
+            else
+                log("> Skipping: resource exists", :warn)
+            end
+        else
+            error("Unknown action: '#{action}'.")
+        end
+    end
+
+    def exists?
+        name = @resource[:name] || @resource[:template][:name] rescue nil
+        if name.nil?
+            error("Field 'NAME' missing from resource")
+            return true
+        end
+
+        pool = BSRESOURCES[@resource[:type]][:pool].new(CLIENT)
+        rc = pool.info
+        error(rc) if OpenNebula.is_error?(rc)
+
+        pool.each do |e|
+            return true if e["NAME"] == name
+        end
+
+        return false
     end
 end
 
@@ -279,6 +333,37 @@ class BSTemplate < BS
 
         rc = the_template.allocate(template)
         error(rc) if OpenNebula.is_error?(rc)
+    end
+end
+
+class BSUser < BS
+    def create
+        user = User.new(User.build_xml, CLIENT)
+
+        args = [@resource[:name], @resource[:password]]
+
+        if (driver = @resource[:driver])
+            args << driver
+        end
+
+        rc = user.allocate(*args)
+        error(rc) if OpenNebula.is_error?(rc)
+    end
+end
+
+BSRESOURCES = {
+    "host"     => {:bs => BSHost, :pool => HostPool},
+    "image"    => {:bs => BSImage, :pool => ImagePool},
+    "template" => {:bs => BSTemplate, :pool => TemplatePool},
+    "net"      => {:bs => BSNet, :pool => VirtualNetworkPool},
+    "user"     => {:bs => BSUser, :pool => UserPool}
+}
+
+def bsresource(resource)
+    begin
+        BSRESOURCES[resource[:type]][:bs].new(resource)
+    rescue
+        error("Resource '#{resource[:type]}' not supported.")
     end
 end
 
