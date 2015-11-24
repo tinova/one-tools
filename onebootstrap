@@ -57,11 +57,18 @@ end
 ################################################################################
 
 def error(e)
-    if e.instance_of?(String)
-        STDERR.puts e
+    m = if e.instance_of?(String)
+        e
     else
-        STDERR.puts e.message
+        e.message
     end
+
+    if COLORED
+        STDERR.puts m.red
+    else
+        STDERR.puts m
+    end
+
     exit 1
 end
 
@@ -252,9 +259,17 @@ class BS
     end
 
     def to_s
-        name = @resource["name"] || @resource["template"]["name"] rescue nil
+        resource = "@type:#{@resource["type"]}"
 
-        "@type:#{@resource["type"]}/@name:#{name}"
+        if (name = @resource["name"] || @resource["template"]["name"])
+            resource << "/@name:#{name}"
+        end
+
+        if (the_id = @resource["id"])
+            resource << "/@id:#{the_id}"
+        end
+
+        return resource
     end
 
     def do!
@@ -263,15 +278,15 @@ class BS
         case action = @resource["action"].to_sym
         when :create
             if id.nil?
-                log("> Creating", :ok)
                 send(action)
+                log("> Create", :ok)
             else
                 log("> Skipping: resource exists", :warn)
             end
         when :update
             if !id.nil?
-                log("> Updating", :ok)
                 update
+                log("> Update", :ok)
             else
                 log("> Skipping: does not exist", :warn)
             end
