@@ -1,0 +1,102 @@
+---
+
+# Available actions:
+#
+# - create
+# - update
+#
+# Available types:
+#
+# - user
+# - host
+# - image
+# - net
+# - template
+# - datastore
+#
+# List of examples. Commented options indicate optional attributes and their
+# default values:
+#
+# ## Create a User
+#
+# - action: create
+#   type: user
+#   name: steven
+#   password: JGns/js
+#   # :driver: core
+#
+# ## Create a Host
+#
+# - action: create
+#   type: host
+#   name: localhost
+#   im: kvm
+#   vmm: kvm
+#   vnm: dummy
+#   # :cluster_id:
+#
+# ## Create an Image
+#
+# - action: create
+#   type: image
+#   ds_id: 1
+#   template:
+#     name: ttylinux
+#     type: OS
+#     path: //opennebula-marketplace.s3.amazonaws.com/ttylinux.img%
+#     driver: raw
+#     prefix: vd
+#
+# ## Create a Virtual Network
+#
+# - action: create
+#   type: net
+#   # :cluster_id:
+#   template:
+#     name: private
+#     bridge: br0
+#     dns: 10.3.4.1
+#     model: virtio
+#     ar:
+#       - ip: 10.3.4.20
+#         size: 235
+#         type: IP4
+#
+# ## Create a Template
+#
+# - action: create
+#   type: template
+#   template:
+#     name: ttylinux
+#     cpu: 1
+#     memory: 512
+#     arch: x86_64
+#     disk:
+#       image: ttylinux
+#     nic:
+#       network: private
+#     graphics:
+#       type: vnc
+#       listen: 0.0.0.0
+#     context:
+#       ssh_public_key: $USER[SSH_PUBLIC_KEY]
+#       network: YES
+#
+# ## Update a user (or any other resource) by name
+#
+# - action: update
+#   type: user
+#   name: steven
+#   # :append: true
+#   template:
+#     ssh_public_key: "the key..."
+#
+# ## Update a user (or any other resource) by ID
+#
+# - action: update
+#   type: user
+#   id: 23
+#   # :append: true
+#   template:
+#     ssh_public_key: "the key..."
+#
