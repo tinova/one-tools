@@ -243,7 +243,7 @@ class BS
             "datastore" => BSDatastore,
             "user"      => BSUser
         }
-        return resources[resource[:type]].new(resource)
+        return resources[resource["type"]].new(resource)
     end
 
     def initialize(resource)
@@ -251,15 +251,15 @@ class BS
     end
 
     def to_s
-        name = @resource[:name] || @resource[:template][:name] rescue nil
+        name = @resource["name"] || @resource["template"]["name"] rescue nil
 
-        "@type:#{@resource[:type]}/@name:#{name}"
+        "@type:#{@resource["type"]}/@name:#{name}"
     end
 
     def do!
         log("* #{self}", :info)
 
-        case action = @resource[:action].to_sym
+        case action = @resource["action"].to_sym
         when :create
             if id.nil?
                 log("> Creating", :ok)
@@ -282,22 +282,22 @@ class BS
     def update
         resource_class = self.class.class_variable_get(:@@resource_class)
 
-        append = @resource[:append] || true
+        append = @resource["append"] || true
 
         r = resource_class.new_with_id(id, CLIENT)
 
-        template = TemplateParser.template_like_str(@resource[:template])
+        template = TemplateParser.template_like_str(@resource["template"])
 
         rc = r.update(template, append)
         error(rc) if OpenNebula.is_error?(rc)
     end
 
     def id
-        if (id = @resource[:id])
+        if (id = @resource["id"])
             return id
         end
 
-        name = @resource[:name] || @resource[:template][:name] rescue nil
+        name = @resource["name"] || @resource["template"]["name"] rescue nil
         if name.nil?
             error("Fields 'NAME' or 'ID' are required")
             return nil
@@ -324,12 +324,12 @@ class BSHost < BS
     def create
         h = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        args = [@resource[:name],
-                @resource[:im],
-                @resource[:vmm],
-                @resource[:vnm]]
+        args = [@resource["name"],
+                @resource["im"],
+                @resource["vmm"],
+                @resource["vnm"]]
 
-        if (cluster_id = @resource[:cluster_id])
+        if (cluster_id = @resource["cluster_id"])
             args << cluster_id
         end
 
@@ -346,9 +346,9 @@ class BSImage < BS
     def create
         image = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        template = TemplateParser.template_like_str(@resource[:template])
+        template = TemplateParser.template_like_str(@resource["template"])
 
-        rc = image.allocate(template, @resource[:ds_id])
+        rc = image.allocate(template, @resource["ds_id"])
         error(rc) if OpenNebula.is_error?(rc)
     end
 end
@@ -360,11 +360,11 @@ class BSNet < BS
     def create
         net = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        template = TemplateParser.template_like_str(@resource[:template])
+        template = TemplateParser.template_like_str(@resource["template"])
 
         args = [template]
 
-        if (cluster_id = @resource[:cluster_id] rescue nil)
+        if (cluster_id = @resource["cluster_id"] rescue nil)
             args << cluster_id
         end
 
@@ -380,11 +380,11 @@ class BSDatastore < BS
     def create
         ds = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        template = TemplateParser.template_like_str(@resource[:template])
+        template = TemplateParser.template_like_str(@resource["template"])
 
         args = [template]
 
-        if (cluster_id = @resource[:cluster_id] rescue nil)
+        if (cluster_id = @resource["cluster_id"] rescue nil)
             args << cluster_id
         end
 
@@ -400,7 +400,7 @@ class BSTemplate < BS
     def create
         the_template = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        template = TemplateParser.template_like_str(@resource[:template])
+        template = TemplateParser.template_like_str(@resource["template"])
 
         rc = the_template.allocate(template)
         error(rc) if OpenNebula.is_error?(rc)
@@ -414,9 +414,9 @@ class BSUser < BS
     def create
         user = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
-        args = [@resource[:name], @resource[:password]]
+        args = [@resource["name"], @resource["password"]]
 
-        if (driver = @resource[:driver])
+        if (driver = @resource["driver"])
             args << driver
         end
 
