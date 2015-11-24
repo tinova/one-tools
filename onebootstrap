@@ -49,6 +49,7 @@ begin
     conf = YAML.load_file(yaml_file)
 rescue
     STDERR.puts "'#{yaml_file}' is not a valid yaml file."
+    exit 1
 end
 
 ################################################################################
