@@ -28,11 +28,17 @@ require 'pp'
 
 client = Client.new
 
-ssh_public_key = File.read("#{ENV['HOME']}/.ssh/id_rsa.pub").strip
+file = ARGV[0] || "#{ENV['HOME']}/.ssh/id_rsa.pub"
+ssh_public_key = File.read(file).strip
 
 user = User.new_with_id(OpenNebula::User::SELF, client)
-user.info
-rc = user.update(%Q{SSH_PUBLIC_KEY="#{ssh_public_key}"}, true)
+rc = user.info
+if OpenNebula.is_error?(rc)
+    STDERR.puts rc.message
+    exit 1
+end
+
+rc = user.update(%Q{SSH_PUBLIC_KEY="#{ssh_public_key}"}, false)
 if OpenNebula.is_error?(rc)
     STDERR.puts rc.message
     exit 1
