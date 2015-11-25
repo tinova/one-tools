@@ -1,10 +1,159 @@
-#!/bin/bash
+#!/usr/bin/env ruby
 
-VM=$1
-shift
+require 'getoptlong'
 
-IP=$(onevm show $VM -x|grep '<IP>'|grep -o '[0-9.]\+'|head -n1)
+ONE_LOCATION=ENV["ONE_LOCATION"]
 
-ssh "$IP" -l root "$@"
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION="/usr/lib/one/ruby"
+    VAR_LOCATION = "/var/lib/one"
+    LIB_LOCATION = "/usr/lib/one"
+    ETC_LOCATION = "/etc/one"
+else
+    RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby"
+    VAR_LOCATION = ONE_LOCATION+"/var"
+    LIB_LOCATION = ONE_LOCATION+"/lib"
+    ETC_LOCATION = ONE_LOCATION + "/etc"
+end
+
+$: << RUBY_LIB_LOCATION
+
+require 'opennebula'
+include OpenNebula
+
+CLIENT = Client.new
+
+def get_id(name)
+    pool = VirtualMachinePool.new(CLIENT, -1)
+    rc = pool.info
+
+    if OpenNebula.is_error?(rc)
+        STDERR.puts rc.message
+        exit 1
+    end
+
+    pool.each do |vm|
+        if vm['NAME'] == name
+            return vm['ID']
+        end
+    end
+
+    return nil
+end
+
+opts = GetoptLong.new(
+  [ '--ip', GetoptLong::NO_ARGUMENT ],
+  [ '--nic_id', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--network_id', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--network', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--wait', GetoptLong::NO_ARGUMENT ],
+  [ '--retries', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--interval', GetoptLong::REQUIRED_ARGUMENT ]
+)
+
+ip         = false
+nic_id     = nil
+network_id = nil
+network    = nil
+wait       = false
+retries    = 100
+interval   = 1
+
+opts.each do |opt, arg|
+    case opt
+    when '--ip'
+        ip = true
+    when '--nic_id'
+        nic_id = arg
+    when '--network_id'
+        network_id = arg
+    when '--network'
+        network = arg
+    when '--wait'
+        wait = true
+    when '--retries'
+        retries = arg.to_i
+    when '--interval'
+        interval = arg.to_i
+    end
+end
+
+id = ARGV.shift
+
+if !id.match(/^\d+$/)
+    vm_id = get_id(id)
+
+    if vm_id.nil?
+        STDERR.puts "VM '#{id}' not found"
+        exit 1
+    else
+        id = vm_id
+    end
+end
+
+vm = VirtualMachine.new_with_id(id, CLIENT)
+rc = vm.info
+if OpenNebula.is_error?(rc)
+    STDERR.puts rc.message
+    exit 1
+end
+
+xpath = "/VM/TEMPLATE/NIC"
+if nic_id
+    ip = true
+    xpath += "[NIC_ID='#{nic_id}']"
+elsif network_id
+    ip = true
+    xpath += "[NETWORK_ID='#{network_id}']"
+elsif network
+    ip = true
+    xpath += "[NETWORK='#{network}']"
+end
+
+hostname = nil
+
+if ip
+    vm.each(xpath) do |nic|
+        hostname = nic['IP']
+        break
+    end
+else
+    hostname = vm['NAME']
+end
+
+if hostname.nil?
+    STDERR.puts "IP for VM '#{vm['NAME']}' not found"
+    exit 1
+end
+
+ssh_cmd = ['ssh', '-l', 'root', hostname]
+
+if wait
+    wait_args = [
+        "-o", "PasswordAuthentication=no",
+        "-o", "IdentitiesOnly=yes",
+        "-o", "StrictHostKeyChecking=no",
+        "-o", "UserKnownHostsFile=/dev/null",
+        "-o", "LogLevel=quiet",
+        "-o", "ConnectionAttempts=3",
+        "-o", "ConnectTimeout=10",
+        "-o", "ControlMaster=no",
+        "-o", "ControlPath=no",
+        "exit", "0"
+    ]
+
+    retries.times do
+        ssh_cmd += wait_args
+        if system(*ssh_cmd)
+            exit 0
+        end
+        STDERR.printf(".")
+        sleep interval
+    end
+    exit 1
+else
+    ssh_cmd += ARGV
+    exec(*ssh_cmd)
+end
 
 
