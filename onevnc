@@ -1,10 +1,72 @@
-#!/bin/bash
+#!/usr/bin/env ruby
 
-onevm_show="$(onevm show $1)"
-PORT=$(echo "$onevm_show"|grep PORT|grep -o '[0-9]\+')
-HOST=$(echo "$onevm_show"|grep ^HOST|awk '{print $NF}')
+require 'getoptlong'
 
-[ -z "$HOST" ] && echo "no host found" && exit 1
-[ -z "$PORT" ] && echo "no port found" && exit 1
+ONE_LOCATION=ENV["ONE_LOCATION"]
 
-${2:-vinagre} $HOST::$PORT
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION="/usr/lib/one/ruby"
+    VAR_LOCATION = "/var/lib/one"
+    LIB_LOCATION = "/usr/lib/one"
+    ETC_LOCATION = "/etc/one"
+else
+    RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby"
+    VAR_LOCATION = ONE_LOCATION+"/var"
+    LIB_LOCATION = ONE_LOCATION+"/lib"
+    ETC_LOCATION = ONE_LOCATION + "/etc"
+end
+
+$: << RUBY_LIB_LOCATION
+
+require 'opennebula'
+include OpenNebula
+
+CLIENT = Client.new
+
+def get_id(name)
+    pool = VirtualMachinePool.new(CLIENT, -1)
+    rc = pool.info
+
+    if OpenNebula.is_error?(rc)
+        STDERR.puts rc.message
+        exit 1
+    end
+
+    pool.each do |vm|
+        if vm['NAME'] == name
+            return vm['ID']
+        end
+    end
+
+    return nil
+end
+
+id = ARGV.shift
+
+if !id.match(/^\d+$/)
+    vm_id = get_id(id)
+
+    if vm_id.nil?
+        STDERR.puts "VM '#{id}' not found"
+        exit 1
+    else
+        id = vm_id
+    end
+end
+
+vm = VirtualMachine.new_with_id(id, CLIENT)
+rc = vm.info
+if OpenNebula.is_error?(rc)
+    STDERR.puts rc.message
+    exit 1
+end
+
+host = vm['HISTORY_RECORDS/HISTORY[last()]/HOSTNAME']
+port = vm['TEMPLATE/GRAPHICS/PORT']
+
+vncviewer = ARGV.shift || 'vinagre'
+
+cmd = [vncviewer, "#{host}::#{port}"]
+
+puts cmd.join(" ")
+exec(*cmd)
