@@ -240,8 +240,10 @@ end
 # Boostrap Classes
 ################################################################################
 
-
 class BS
+    RETRIES = 100
+    INTERVAL = 1
+
     def self.factory(resource)
         resources = {
             "host"      => BSHost,
@@ -278,7 +280,9 @@ class BS
         case action = @resource["action"].to_sym
         when :create
             if id.nil?
-                send(action)
+                create
+                wait
+
                 log("> Create", :ok)
             else
                 log("> Skipping: resource exists", :warn)
@@ -331,6 +335,25 @@ class BS
 
         return nil
     end
+
+    def wait
+        return true
+    end
+
+    def wait_states(states)
+        RETRIES.times do
+            rc = @one_resource.info
+            error(rc) if OpenNebula.is_error?(rc)
+
+            if [states].flatten.include?(@one_resource.state_str)
+                return true
+            end
+
+            sleep INTERVAL
+        end
+
+        return false
+    end
 end
 
 class BSHost < BS
@@ -353,6 +376,10 @@ class BSHost < BS
 
        error(rc) if OpenNebula.is_error?(rc)
     end
+
+    def wait
+        wait_states(["MONITORING_MONITORED", "MONITORED"])
+    end
 end
 
 class BSImage < BS
@@ -360,12 +387,27 @@ class BSImage < BS
     @@pool_class     = ImagePool
 
     def create
-        image = @@resource_class.new(@@resource_class.build_xml, CLIENT)
+        @one_resource = @@resource_class.new(@@resource_class.build_xml, CLIENT)
 
         template = TemplateParser.template_like_str(@resource["template"])
 
-        rc = image.allocate(template, @resource["ds_id"])
+        rc = @one_resource.allocate(template, @resource["ds_id"])
         error(rc) if OpenNebula.is_error?(rc)
+    end
+
+    def wait
+        RETRIES.times do
+            rc = @one_resource.info
+            error(rc) if OpenNebula.is_error?(rc)
+
+            if @one_resource.state_str == "READY"
+                return true
+            end
+
+            sleep INTERVAL
+        end
+
+        return false
     end
 end
 
@@ -406,6 +448,10 @@ class BSDatastore < BS
 
         rc = ds.allocate(*args)
         error(rc) if OpenNebula.is_error?(rc)
+    end
+
+    def wait
+        wait_states(["READY"])
     end
 end
 
