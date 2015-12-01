@@ -147,7 +147,6 @@ if wait
         if system(*ssh_cmd)
             exit 0
         end
-        STDERR.printf(".")
         sleep interval
     end
     exit 1
