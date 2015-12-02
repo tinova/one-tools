@@ -142,8 +142,9 @@ if wait
         "exit", "0"
     ]
 
+    ssh_cmd += wait_args
+
     retries.times do
-        ssh_cmd += wait_args
         if system(*ssh_cmd)
             exit 0
         end
