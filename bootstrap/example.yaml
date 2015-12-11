@@ -43,7 +43,7 @@
 #   template:
 #     name: ttylinux
 #     type: OS
-#     path: //opennebula-marketplace.s3.amazonaws.com/ttylinux.img%
+#     path: http://opennebula-marketplace.s3.amazonaws.com/ttylinux.img
 #     driver: raw
 #     prefix: vd
 #
