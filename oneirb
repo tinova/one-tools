@@ -14,8 +14,6 @@ else
     ETC_LOCATION = ONE_LOCATION + "/etc"
 end
 
-ONEGATE_AUTH = VAR_LOCATION + "/.one/onegate_auth"
-
 $: << RUBY_LIB_LOCATION
 $: << RUBY_LIB_LOCATION+"/cloud" # For the Repository Manager
 $: << RUBY_LIB_LOCATION+"/cli" # For the Repository Manager
@@ -31,15 +29,6 @@ require 'fileutils'
 require 'json'
 
 require 'opennebula'
-require 'opennebula/oneflow_client'
-
-require 'one_helper'
-require 'one_helper/onevm_helper'
-
-require 'CloudAuth'
-require 'CloudServer'
-require 'models'
-require 'log'
 include OpenNebula
 
 require 'pp'
@@ -52,6 +41,7 @@ end
 
 # OpenNebula credentials
 CREDENTIALS = File.read(authfile).strip
+
 # XML_RPC endpoint where OpenNebula is listening
 ENDPOINT    = "http://localhost:2633/RPC2"
 
@@ -60,16 +50,3 @@ ENDPOINT    = "http://localhost:2633/RPC2"
 version = ">= 0"
 gem 'pry', version
 load Gem.bin_path('pry', 'pry', version)
-#require "irb"
-#
-#if __FILE__ == $0
-#  IRB.start(__FILE__)
-#else
-#  # check -e option
-#  if /^-e$/ =~ $0
-#    IRB.start(__FILE__)
-#  else
-#    IRB.setup(__FILE__)
-#  end
-#end
-#
