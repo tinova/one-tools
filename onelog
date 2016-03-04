@@ -23,17 +23,8 @@ if [ -n "$ONE_LOCATION" ]; then
         sunstone.error)
             $PAGER $ONE_LOCATION/var/sunstone.error
             ;;
-        occi)
-            $PAGER $ONE_LOCATION/var/occi-server.log
-            ;;
-        occi.error)
-            $PAGER $ONE_LOCATION/var/occi-server.error
-            ;;
-        ozones)
-            $PAGER $ONE_LOCATION/var/ozones-server.log
-            ;;
-        ozones.error)
-            $PAGER $ONE_LOCATION/var/ozones-server.error
+        sched)
+            $PAGER $ONE_LOCATION/var/sched.log
             ;;
         *)
             $PAGER $ONE_LOCATION/var/vms/$1/vm.log
@@ -57,17 +48,8 @@ else
         sunstone.error)
             $PAGER /var/log/one/sunstone.error
             ;;
-        occi)
-            $PAGER /var/log/one/occi-server.log
-            ;;
-        occi.error)
-            $PAGER /var/log/one/occi-server.error
-            ;;
-        ozones)
-            $PAGER /var/log/one/ozones-server.log
-            ;;
-        ozones.error)
-            $PAGER /var/log/one/ozones-server.error
+        sched)
+            $PAGER /var/log/one/sched.log
             ;;
         *)
             $PAGER /var/log/one/$1.log
