@@ -251,7 +251,8 @@ class BS
             "template"  => BSTemplate,
             "net"       => BSNet,
             "datastore" => BSDatastore,
-            "user"      => BSUser
+            "user"      => BSUser,
+            "cluster"   => BSCluster
         }
         return resources[hash["type"]].new(hash)
     end
@@ -306,7 +307,8 @@ class BS
 
         r = resource_class.new_with_id(id, CLIENT)
 
-        template = TemplateParser.template_like_str(@hash["template"])
+        bstmpl   = @hash["template"]
+        template = TemplateParser.template_like_str(bstmpl) if !bstmpl.nil?
 
         rc = r.update(template, append)
         error(rc) if OpenNebula.is_error?(rc)
@@ -487,6 +489,45 @@ class BSUser < BS
 
         rc = @resource.allocate(*args)
         error(rc) if OpenNebula.is_error?(rc)
+    end
+end
+
+class BSCluster < BS
+    @@resource_class = Cluster
+    @@pool_class    = ClusterPool
+
+    def create
+
+        @resource = @@resource_class.new(@@resource_class.build_xml, CLIENT)
+        hosts = @hash["hosts"]
+        vnets = @hash["vnets"]
+        dss   = @hash["datastores"]
+
+        rc = @resource.allocate(@hash["name"])
+        return error(rc) if OpenNebula.is_error?(rc)
+
+        hosts.each { |h|
+            bsh   = BSHost.new({"name" => h})
+            bshid = bsh.id
+
+            @resource.addhost(bshid.to_i) if !bshid.nil?
+        }
+
+        vnets.each { |n|
+            bsn   = BSNet.new({"name" => n})
+            bsnid = bsn.id
+
+            @resource.addvnet(bsnid.to_i) if !bsnid.nil?
+        }
+
+        dss.each { |d|
+            bsd   = BSDatastore.new({"name" => d})
+            bsdid = bsd.id
+
+            @resource.adddatastore(bsdid.to_i) if !bsdid.nil?
+        }
+
+        update
     end
 end
 
