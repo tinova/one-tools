@@ -356,6 +356,19 @@ class BS
 
         return false
     end
+
+    def resource_wait(&block)
+        RETRIES.times do
+            rc = @resource.info
+            error(rc) if OpenNebula.is_error?(rc)
+
+            return true if yield @resource
+
+            sleep INTERVAL
+        end
+
+        return false
+    end
 end
 
 class BSHost < BS
@@ -456,7 +469,9 @@ class BSDatastore < BS
     end
 
     def wait
-        wait_states(["READY"])
+        return false if !wait_states(["READY"])
+
+        resource_wait {|res| res["TOTAL_MB"].to_s != "0" }
     end
 end
 
