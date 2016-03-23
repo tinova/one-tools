@@ -291,6 +291,8 @@ class BS
         when :update
             if !id.nil?
                 update
+                wait
+
                 log("> Update", :ok)
             else
                 log("> Skipping: does not exist", :warn)
@@ -305,12 +307,12 @@ class BS
 
         append = @hash["append"] || true
 
-        r = resource_class.new_with_id(id, CLIENT)
+        @resource = resource_class.new_with_id(id, CLIENT)
 
         bstmpl   = @hash["template"]
         template = TemplateParser.template_like_str(bstmpl) if !bstmpl.nil?
 
-        rc = r.update(template, append)
+        rc = @resource.update(template, append)
         error(rc) if OpenNebula.is_error?(rc)
     end
 
