@@ -48,6 +48,7 @@ opts = GetoptLong.new(
   [ '--network', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--wait', GetoptLong::NO_ARGUMENT ],
   [ '--retries', GetoptLong::REQUIRED_ARGUMENT ],
+  [ '--login', '-l', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--interval', GetoptLong::REQUIRED_ARGUMENT ]
 )
 
@@ -58,6 +59,7 @@ network    = nil
 wait       = false
 retries    = 100
 interval   = 1
+login      = "root"
 
 opts.each do |opt, arg|
     case opt
@@ -73,6 +75,8 @@ opts.each do |opt, arg|
         wait = true
     when '--retries'
         retries = arg.to_i
+    when '--login'
+        login = arg
     when '--interval'
         interval = arg.to_i
     end
@@ -126,7 +130,7 @@ if hostname.nil?
     exit 1
 end
 
-ssh_cmd = ['ssh', '-l', 'root', hostname]
+ssh_cmd = ['ssh', '-l', login, hostname]
 
 if wait
     wait_args = [
