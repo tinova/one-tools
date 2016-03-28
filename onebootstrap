@@ -241,7 +241,7 @@ end
 ################################################################################
 
 class BS
-    RETRIES = 100
+    RETRIES = 600
     INTERVAL = 1
 
     def self.factory(hash)
