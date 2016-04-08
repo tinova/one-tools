@@ -382,8 +382,7 @@ class BSHost < BS
 
         args = [@hash["name"],
                 @hash["im"],
-                @hash["vmm"],
-                @hash["vnm"]]
+                @hash["vmm"]]
 
         if (cluster_id = @hash["cluster_id"])
             args << cluster_id
