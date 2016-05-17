@@ -43,13 +43,34 @@ CLIENT = Client.new
 # Read Configuration
 ################################################################################
 
-yaml_file = ARGV[0] || File.join(DIR, "bootstrap", "default.yaml")
+yaml_location = ARGV[0] || File.join(DIR, "bootstrap", "default.d")
 
-begin
-    conf = YAML.load_file(yaml_file)
-rescue
-    STDERR.puts "'#{yaml_file}' is not a valid yaml file."
-    exit 1
+if File.directory?(yaml_location)
+    conf = []
+    conf_item = nil
+    Dir[File.join(yaml_location, "*.yaml")].sort.each do |f|
+        begin
+            conf_item = YAML.load_file(f)
+        rescue
+            STDERR.puts "'#{f}' is not a valid yaml file."
+            exit 1
+        end
+        if conf_item.instance_of? Array
+            conf += conf_item
+        elsif conf_item.instance_of? Hash
+            conf << conf_item
+        else
+            STDERR.puts "'#{f}' contains an unknown type."
+            exit 1
+        end
+    end
+else
+    begin
+        conf = YAML.load_file(yaml_location)
+    rescue
+        STDERR.puts "'#{yaml_location}' is not a valid yaml file."
+        exit 1
+    end
 end
 
 ################################################################################
