@@ -43,6 +43,7 @@ end
 
 opts = GetoptLong.new(
   [ '--ip', GetoptLong::NO_ARGUMENT ],
+  [ '--name', GetoptLong::NO_ARGUMENT ],
   [ '--nic_id', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--network_id', GetoptLong::REQUIRED_ARGUMENT ],
   [ '--network', GetoptLong::REQUIRED_ARGUMENT ],
@@ -52,7 +53,8 @@ opts = GetoptLong.new(
   [ '--interval', GetoptLong::REQUIRED_ARGUMENT ]
 )
 
-ip         = false
+ip         = true
+name       = false
 nic_id     = nil
 network_id = nil
 network    = nil
@@ -65,6 +67,8 @@ opts.each do |opt, arg|
     case opt
     when '--ip'
         ip = true
+    when '--name'
+        ip = false
     when '--nic_id'
         nic_id = arg
     when '--network_id'
