@@ -17,7 +17,7 @@ else
     RUBY_LIB_LOCATION = ONE_LOCATION + "/lib/ruby"
     VAR_LOCATION      = ONE_LOCATION + "/var"
     LIB_LOCATION      = ONE_LOCATION + "/lib"
-    ETC_LOCATION      = ONE_LOCATION +"/etc"
+    ETC_LOCATION      = ONE_LOCATION + "/etc"
 end
 
 $: << RUBY_LIB_LOCATION
