@@ -262,6 +262,8 @@ end
 ################################################################################
 
 class BS
+    attr_accessor :resource
+
     RETRIES = 600
     INTERVAL = 1
 
@@ -273,7 +275,8 @@ class BS
             "net"       => BSNet,
             "datastore" => BSDatastore,
             "user"      => BSUser,
-            "cluster"   => BSCluster
+            "cluster"   => BSCluster,
+            "marketapp" => BSMarketApp
         }
         return resources[hash["type"]].new(hash)
     end
@@ -391,6 +394,11 @@ class BS
         end
 
         return false
+    end
+
+    def set_resource
+        resource_class = self.class.class_variable_get(:@@resource_class)
+        @resource = resource_class.new(resource_class.build_xml(id), CLIENT)
     end
 end
 
@@ -567,6 +575,42 @@ class BSCluster < BS
         }
 
         update
+    end
+end
+
+
+class BSMarketApp < BS
+    @@resource_class = MarketPlaceApp
+    @@pool_class     = MarketPlaceAppPool
+
+    def create
+        @resource = @@resource_class.new(@@resource_class.build_xml(@hash["id"]), CLIENT)
+
+        rc = @resource.info
+        error(rc) if OpenNebula.is_error?(rc)
+
+        rc = @resource.export(
+            :dsid => @hash["ds_id"],
+            :name => @hash["name"]
+        )
+
+        error(rc) if OpenNebula.is_error?(rc)
+    end
+
+    def id
+        t = BSTemplate.new({"name" => @hash["name"]})
+        i = BSImage.new({"name" => @hash["name"]})
+
+        return t if t.id
+        return i if i.id
+
+        nil
+    end
+
+    def wait
+        i = BSImage.new({"name" => @hash["name"]})
+        i.set_resource
+        i.wait
     end
 end
 
