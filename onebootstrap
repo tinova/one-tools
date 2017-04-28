@@ -621,4 +621,4 @@ end
 conf.each do |hash|
     r = BS.factory(hash)
     r.do!
-end
+end if conf && !conf.empty?
