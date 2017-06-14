@@ -1,10 +1,30 @@
 #!/usr/bin/ruby
 
+# This inventory extracts VM information from OpenNebula to be used by Ansible.
 
-# Special variables:
-# ANSIBLE_HOST: 'eth0', 'eth1', etc... or 'yes'
-# ANSIBLE_GROUP: comma separated
-#
+# The following information is obtained:
+
+# * All the parameters in the Context and in the User Template
+# * Disk information: size, image_id and persistancy
+# * Network information: IP, MAC address, etc
+
+# Only VMs that meet any of these conditions are returned by the inventory
+
+# * It has a context variable called "ANSIBLE". The content of this variable is
+#   the ansible group it will be placed into
+# * It has the "ansible" label
+# * It has a label under "ansible". Whatever the label is will be the ansible
+#   group it will be placed into
+
+# If there is no DNS for the VM, you may use the User Template variable
+# "ANSIBLE_HOSTNAME" in order to specify what IP should this inventory report to
+# ansible:
+
+# * ANSIBLE_HOSTNAME is undefined: Ansible will use the VM name
+# * ANSIBLE_HOSTNAME=yes: Ansible will use the IP of the first interface
+# * ANSIBLE_HOSTNAME=eth0: Ansible will use the IP of the first interface
+# * ANSIBLE_HOSTNAME=eth1: Ansible will use the IP of the second interface
+# * ANSIBLE_HOSTNAME=ethN: Ansible will use the IP of the N-1 interface
 
 ONE_LOCATION=ENV["ONE_LOCATION"]
 
@@ -84,6 +104,16 @@ end
 inventory = Inventory.new
 
 vm_pool.each do |vm|
+    labels = vm["USER_TEMPLATE/LABELS"].split(",").select do |e|
+        e.match(/ansible(\/|$)/)
+    end rescue nil
+
+    ansible_role = vm["TEMPLATE/CONTEXT/ANSIBLE"] rescue nil
+
+    if (labels.nil? || labels.empty?) && (ansible_role.nil? || ansible_role.empty?)
+        next
+    end
+
     id   = "one-#{vm['ID']}"
     name = vm["NAME"]
 
@@ -123,7 +153,7 @@ vm_pool.each do |vm|
 
     ansible_host = vm["USER_TEMPLATE/ANSIBLE_HOST"]
     if ansible_host
-        var_ip = if ansible_host.match(/^eth\d+$/)
+        var_ip = if ansible_host.match(/^eth\d+$/i)
             ansible_host.upcase + "_IP"
         else
             "ETH0_IP"
@@ -131,15 +161,16 @@ vm_pool.each do |vm|
 
         ip = vm["TEMPLATE/CONTEXT/#{var_ip}"]
 
-        if ip
-            inventory.hostvar(name, "ansible_host", ip)
-        end
+        inventory.hostvar(name, "ansible_host", ip) if ip
     end
 
-    ansible_group = vm["USER_TEMPLATE/ANSIBLE_GROUP"]
+    labels.each do |label|
+        _, group = label.split("/", 2)
+        inventory.host(name, group.gsub("/", ",")) if group
+    end if labels
 
-    if ansible_group
-        ansible_group.split(",").each{|g| inventory.host(name, g.strip)}
+    if ansible_role && !ansible_role.empty?
+        inventory.host(name, ansible_role)
     end
 
     inventory.host(name)
