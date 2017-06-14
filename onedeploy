@@ -1,2 +1,2 @@
 #!/bin/bash
-onevm deploy `onevm create $1|awk '{print $2}'` `onehost list|awk 'END{print $1}'`
+onevm deploy `onetemplate instantiate $1|awk '{print $NF}'` `onehost list|sed 1d|awk '{if($NF=="on"){print $1}}'|head -n1`
