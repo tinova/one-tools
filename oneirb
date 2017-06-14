@@ -22,30 +22,45 @@ $: << LIB_LOCATION+'/oneflow/lib'
 ################################################
 # Required libraries
 ################################################
-require 'yaml'
+
+require 'base64'
+require 'csv'
+require 'date'
+require 'digest/md5'
 require 'erb'
-require 'tempfile'
 require 'fileutils'
 require 'json'
-
-require 'opennebula'
-include OpenNebula
-
+require 'nokogiri'
+require 'openssl'
+require 'ox'
+require 'set'
+require 'socket'
+require 'sqlite3'
+require 'tempfile'
+require 'time'
+require 'uri'
+require 'yaml'
 require 'pp'
 
-if ENV['ONE_AUTH']
-    authfile = ENV['ONE_AUTH']
-else
-    authfile = "#{ENV['HOME']}/.one/one_auth"
+require 'opennebula'
+require 'vcenter_driver'
+include OpenNebula
+
+
+@client = Client.new
+
+module OpenNebula
+    class XMLElement
+        def self.from_xml(s)
+            m = s.match(/^<(\w+)>/)
+            root_element = m[1]
+
+            elem = XMLElement.new
+            elem.initialize_xml(s, root_element)
+            return elem
+        end
+    end
 end
-
-# OpenNebula credentials
-CREDENTIALS = File.read(authfile).strip
-
-# XML_RPC endpoint where OpenNebula is listening
-ENDPOINT    = "http://localhost:2633/RPC2"
-
-@client = Client.new(CREDENTIALS, ENDPOINT)
 
 version = ">= 0"
 gem 'pry', version
