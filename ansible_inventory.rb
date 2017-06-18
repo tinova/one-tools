@@ -102,8 +102,15 @@ if OpenNebula.is_error?(rc)
 end
 
 inventory = Inventory.new
-
 vm_pool.each do |vm|
+    # Require READY=YES if REPORT_READY=YES
+    if  vm["TEMPLATE/CONTEXT/REPORT_READY"] == "YES" &&
+        vm["TEMPLATE/CONTEXT/TOKEN"] == "YES" &&
+        vm["USER_TEMPLATE/READY"] != "YES" then
+
+        next
+    end
+
     labels = vm["USER_TEMPLATE/LABELS"].split(",").select do |e|
         e.match(/ansible(\/|$)/)
     end rescue nil
