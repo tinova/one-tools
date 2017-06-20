@@ -17,14 +17,14 @@
 #   group it will be placed into
 
 # If there is no DNS for the VM, you may use the User Template variable
-# "ANSIBLE_HOSTNAME" in order to specify what IP should this inventory report to
+# "ANSIBLE_HOST" in order to specify what IP should this inventory report to
 # ansible:
 
-# * ANSIBLE_HOSTNAME is undefined: Ansible will use the VM name
-# * ANSIBLE_HOSTNAME=yes: Ansible will use the IP of the first interface
-# * ANSIBLE_HOSTNAME=eth0: Ansible will use the IP of the first interface
-# * ANSIBLE_HOSTNAME=eth1: Ansible will use the IP of the second interface
-# * ANSIBLE_HOSTNAME=ethN: Ansible will use the IP of the N-1 interface
+# * ANSIBLE_HOST is undefined: Ansible will use the VM name
+# * ANSIBLE_HOST=yes: Ansible will use the IP of the first interface
+# * ANSIBLE_HOST=eth0: Ansible will use the IP of the first interface
+# * ANSIBLE_HOST=eth1: Ansible will use the IP of the second interface
+# * ANSIBLE_HOST=ethN: Ansible will use the IP of the N-1 interface
 
 ONE_LOCATION=ENV["ONE_LOCATION"]
 
@@ -115,7 +115,7 @@ vm_pool.each do |vm|
         e.match(/ansible(\/|$)/)
     end rescue nil
 
-    ansible_role = vm["TEMPLATE/CONTEXT/ANSIBLE"] rescue nil
+    ansible_role = vm["TEMPLATE/CONTEXT/ANSIBLE_ROLE"] rescue nil
 
     if (labels.nil? || labels.empty?) && (ansible_role.nil? || ansible_role.empty?)
         next
@@ -159,6 +159,9 @@ vm_pool.each do |vm|
     end
 
     ansible_host = vm["USER_TEMPLATE/ANSIBLE_HOST"]
+    ansible_host ||= vm["TEMPLATE/CONTEXT/ANSIBLE_HOST"]
+    ansible_host ||= ENV['ANSIBLE_HOST']
+
     if ansible_host
         var_ip = if ansible_host.match(/^eth\d+$/i)
             ansible_host.upcase + "_IP"
