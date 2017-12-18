@@ -503,7 +503,9 @@ class BSDatastore < BS
     def wait
         return false if !wait_states(["READY"])
 
-        resource_wait {|res| res["TOTAL_MB"].to_s != "0" }
+        unless @hash["nowait"]
+            resource_wait {|res| res["TOTAL_MB"].to_s != "0" }
+        end
     end
 end
 
