@@ -259,5 +259,16 @@ Returns the ip of a VM:
 Useful for things like:
 
     $ scp myfile root@`oneip 0`:
+    
+    
+Author
+======
+
+Jaime Melis (http://github.com/jmelis)
+
+Maintainer
+----------
+
+Tino Vazquez (http://github/tinova)
 
 
