@@ -103,6 +103,8 @@ end
 
 inventory = Inventory.new
 vm_pool.each do |vm|
+    # explizit info pull to gather all Context vairables
+    vm.info
     # Require READY=YES if REPORT_READY=YES
     if  vm["TEMPLATE/CONTEXT/REPORT_READY"] == "YES" &&
         vm["TEMPLATE/CONTEXT/TOKEN"] == "YES" &&
