@@ -23,6 +23,7 @@ Commands
 - [__onecast__](#onecast): OpenNebula templates with variables.
 - [__oneip__](#oneip): Returns the IP of a VM.
 - [__oneping__](#oneping): Pings a VM.
+- [__onevcenterirb__](#onevcenterirb): Enters an irb environment with vCenter driver loaded.
 
 onelog
 ------
@@ -123,6 +124,20 @@ variable `@client` is available in the IRB shell.
     ?> vm.info;
     ?> vm['NAME']
     => "ttylinux"
+
+onevcenterirb
+-------------
+
+Enters an irb environment with vCenter driver loaded:
+
+    $ onevcenterirb
+    $ vm = vm(0) # get vcenterdriver machine with opennebula id: 0
+    $ vm.one_item['ID']
+    => "0"
+    $ vm.disk(0).managed?
+    => false
+    $ vm.disk(0).ds.class
+    => RbVmomi::VIM::Datastore
 
 oneconf
 -------
