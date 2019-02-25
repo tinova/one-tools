@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+ONE_LOCATION=ENV["ONE_LOCATION"] if !defined?(ONE_LOCATION)
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION="/usr/lib/one/ruby" if !defined?(RUBY_LIB_LOCATION)
+else
+    RUBY_LIB_LOCATION=ONE_LOCATION+"/lib/ruby" if !defined?(RUBY_LIB_LOCATION)
+end
+
+$: << RUBY_LIB_LOCATION
+$: << File.dirname(__FILE__)
+
+require 'vcenter_driver'
+
+def vclient_host(id)
+    vi_client = VCenterDriver::VIClient.new_from_host(id)
+end
+
+def vm(vmid)
+    one_vm = VCenterDriver::VIHelper.one_item(OpenNebula::VirtualMachine, vmid)
+    did    = one_vm["DEPLOY_ID"]
+    hid    = one_vm.retrieve_xmlelements("HISTORY_RECORDS/HISTORY/HID").last.text.to_i
+    VCenterDriver::VirtualMachine.new_one(vclient_host(hid), did, one_vm)
+end
+
+def ds(dsid)
+    one_ds = VCenterDriver::VIHelper.one_item(OpenNebula::Datastore, dsid)
+    ref    = one_ds["TEMPLATE/VCENTER_DS_REF"]
+    vc     = one_ds["TEMPLATE/VCENTER_HOST"]
+
+    pool = VCenterDriver::VIHelper.one_pool(OpenNebula::HostPool)
+    hid   =pool.retrieve_xmlelements("HOST[TEMPLATE/VCENTER_HOST = '#{vc}']").first["ID"]
+
+    vi_client = vclient_host(hid)
+
+    VCenterDriver::Datastore.new_from_ref(ref, vi_client)
+end
+
+def host(hid)
+    vi_client = vclient_host(hid)
+    one_h = VCenterDriver::VIHelper.one_item(OpenNebula::Host, hid)
+
+    VCenterDriver::ClusterComputeResource.new_from_ref(one_h['TEMPLATE/VCENTER_CCR_REF'], vi_client)
+end
+
+version = ">= 0"
+gem 'pry', version
+load Gem.bin_path('pry', 'pry', version)
