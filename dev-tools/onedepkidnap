@@ -17,6 +17,8 @@ end
 VMM_VCENTER = VAR_LOCATION + '/remotes/vmm/vcenter'
 $LOAD_PATH << RUBY_LIB_LOCATION
 
+require 'fileutils'
+
 template_id = ARGV[0]
 
 # Add unindent
@@ -41,16 +43,25 @@ File.rename VMM_VCENTER + '/deploy', VMM_VCENTER + '/deploy.bk'
 File.open(VMM_VCENTER + '/deploy', 'w') {|file| file.write(HIJACK_CODE) }
 File.chmod(0o0755, VMM_VCENTER + '/deploy')
 
-# instantiate template
-vm_id = `onetemplate instantiate #{template_id}`.split(':')[1].strip
+begin
+    # instantiate template
+    vm_id = `onetemplate instantiate #{template_id}`.split(':')[1].strip
+    raise if vm_id.to_i.to_s != vm_id
 
-loop do
-    state = `onevm show #{vm_id}|grep ^LCM_STATE|cut -d':' -f 2`
-    state.strip! if state
-    puts "Waiting for VM #{vm_id} in state BOOT_FAILURE, got: " + state
-    break if state == 'BOOT_FAILURE'
-    sleep 1
+    loop do
+        state = `onevm show #{vm_id}|grep ^LCM_STATE|cut -d':' -f 2`
+        state.strip! if state
+        puts "Waiting for VM #{vm_id} in state BOOT_FAILURE, got: " + state
+        break if state == 'BOOT_FAILURE'
+
+        sleep 1
+    end
+rescue StandardError
+    STDERR.puts 'Instantiate failed, rolling back changes in deploy script'
+    FileUtils.mv(VMM_VCENTER + '/deploy.bk', VMM_VCENTER + '/deploy')
+    exit(-1)
 end
+
 
 # inject pry code
 deployment_file = File.open(VMM_VCENTER + '/deploy', 'w')

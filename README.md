@@ -24,6 +24,11 @@ Commands
 - [__oneip__](#oneip): Returns the IP of a VM.
 - [__oneping__](#oneping): Pings a VM.
 
+*Dev commands*
+
+- [__onedepkidnap__](#onedepkidnap): Kidnaps driver action to deploy and adds ruby pry
+
+
 onelog
 ------
 
@@ -259,8 +264,30 @@ Returns the ip of a VM:
 Useful for things like:
 
     $ scp myfile root@`oneip 0`:
-    
-    
+
+onedepkidnap
+------------
+
+Kidnaps deploy drv_action xml and writes it to /tmp/one_deploy_xmldrvaction. Add binding.pry to execute deploy action step by step.
+
+   $ onedepkidnap 0
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: LCM_INIT
+   Waiting for VM 26 in state BOOT_FAILURE, got: PROLOG
+   Waiting for VM 26 in state BOOT_FAILURE, got: BOOT_FAILURE
+
+   Deploy kidnapped. Execute the following to debug the deploy:
+    /home/tinova/dev/one/master/var/remotes/vmm/vcenter/deploy '/home/tinova/dev/one/master/var/vms/26/deployment.0' 'Cluster' 26 Cluster
+
+   Remember to restore the deploy script afterwards:
+    mv /home/tinova/dev/one/master/var/remotes/vmm/vcenter/deploy.bk /home/tinova/dev/one/master/var/remotes/vmm/vcenter/deploy
+
 Author
 ======
 
@@ -270,5 +297,3 @@ Maintainer
 ----------
 
 Tino Vazquez (http://github/tinova)
-
-
