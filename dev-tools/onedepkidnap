@@ -1,0 +1,79 @@
+#!/usr/bin/ruby
+
+ONE_LOCATION = ENV['ONE_LOCATION']
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION = '/usr/lib/one/ruby'
+    VAR_LOCATION = '/var/lib/one'
+    LIB_LOCATION = '/usr/lib/one'
+    ETC_LOCATION = '/etc/one'
+else
+    RUBY_LIB_LOCATION = ONE_LOCATION + '/lib/ruby'
+    VAR_LOCATION = ONE_LOCATION + '/var'
+    LIB_LOCATION = ONE_LOCATION + '/lib'
+    ETC_LOCATION = ONE_LOCATION + '/etc'
+end
+
+VMM_VCENTER = VAR_LOCATION + '/remotes/vmm/vcenter'
+$LOAD_PATH << RUBY_LIB_LOCATION
+
+template_id = ARGV[0]
+
+# Add unindent
+class String
+
+    def unindent(spaces = 4)
+        gsub!(/^ {#{spaces}}/, '')
+    end
+
+end
+
+HIJACK_CODE = <<-EOT.unindent(1)
+ #!/bin/bash
+ cat > /tmp/one_deploy_xmldrvaction
+ exit -1
+EOT
+
+# backup vcenter deploy
+File.rename VMM_VCENTER + '/deploy', VMM_VCENTER + '/deploy.bk'
+
+# write hijack code
+File.open(VMM_VCENTER + '/deploy', 'w') {|file| file.write(HIJACK_CODE) }
+File.chmod(0o0755, VMM_VCENTER + '/deploy')
+
+# instantiate template
+vm_id = `onetemplate instantiate #{template_id}`.split(':')[1].strip
+
+loop do
+    state = `onevm show #{vm_id}|grep ^LCM_STATE|cut -d':' -f 2`
+    state.strip! if state
+    puts "Waiting for VM #{vm_id} in state BOOT_FAILURE, got: " + state
+    break if state == 'BOOT_FAILURE'
+    sleep 1
+end
+
+# inject pry code
+deployment_file = File.open(VMM_VCENTER + '/deploy', 'w')
+backup_deployment_file = File.new(VMM_VCENTER + '/deploy.bk')
+backup_deployment_file.each do |line|
+    if line =~ /^drv_action.initialize_xml/
+        deployment_file << <<-EOT.unindent(10)
+          drv_xml = `cat /tmp/one_deploy_xmldrvaction`.gsub('\\n','')
+          drv_action.initialize_xml(Base64.decode64(drv_xml), 'VM')
+          require 'pry-byebug'
+          binding.pry
+        EOT
+    else
+        deployment_file << line
+    end
+end
+
+deployment_file.close
+backup_deployment_file.close
+
+puts
+puts 'Deploy kidnapped. Execute the following to debug the deploy:'
+puts " #{`onelog #{vm_id}|grep failed|grep deploy|tail -1`.split(':')[5].strip}"
+puts
+puts 'Remember to restore the deploy script afterwards:'
+puts " mv #{VMM_VCENTER + '/deploy.bk'} #{VMM_VCENTER + '/deploy'}"
