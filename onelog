@@ -26,6 +26,9 @@ if [ -n "$ONE_LOCATION" ]; then
         sched)
             $PAGER $ONE_LOCATION/var/sched.log
             ;;
+        monitor)
+            $PAGER $ONE_LOCATION/var/monitor.log
+            ;;
         *)
             $PAGER $ONE_LOCATION/var/vms/$1/vm.log
             ;;
@@ -50,6 +53,9 @@ else
             ;;
         sched)
             $PAGER /var/log/one/sched.log
+            ;;
+        monitor)
+            $PAGER /var/log/one/monitor.log
             ;;
         *)
             $PAGER /var/log/one/$1.log
