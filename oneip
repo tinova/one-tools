@@ -11,7 +11,7 @@ then
 		ARG_IP=$2
 	else
 		echo "#############################################"
-		echo "  This ($2) is not valid ip format"
+		echo "  This ($2) is not valid IP format"
 		echo "#############################################" 	
 		exit
 	fi
@@ -30,7 +30,7 @@ then
 	if [[ $NET_EXISTS == "true" ]]
 	then
 		echo "#############################################"
-		echo "  Net with this if ($2) does not exists"
+		echo "  Net with this IP ($2) does not exists"
 		echo "#############################################" 	
 		exit
 	fi
@@ -79,14 +79,14 @@ case $1 in
 				then
 					IP_RESERVED=true
 					echo "#############################################"
-					echo "  This ip is reserved"
+					echo "  This IP is reserved"
 					echo "#############################################"
 				else
 					IP_USED=true
 					VM_NAME=$(onevm show $VM_ID | grep ^NAME | awk '{print $3}')
 					VM_HOST=$(onevm show $VM_ID | grep ^HOST | awk '{print $3}')
 					echo "#############################################"
-					echo "  This ip is on VM"
+					echo "  This IP is on VM"
 					echo "  VM   : $VM_NAME"
 					echo "  Host : $VM_HOST"
 					echo "#############################################"
