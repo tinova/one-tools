@@ -21,7 +21,7 @@ Commands
 - [__oneconf__](#oneconf): Modifies the default configuration files.
 - [__onebootstrap__](#onebootstrap): Creates initial OpenNebula resources.
 - [__onecast__](#onecast): OpenNebula templates with variables.
-- [__oneip__](#oneip): Returns the IP of a VM.
+- [__oneip__](#oneip): Returns state of IP (Used, Reserved, Free) and also get free IP to reserve.
 - [__oneping__](#oneping): Pings a VM.
 - [__onevcenterirb__](#onevcenterirb): Enters an irb environment with vCenter driver loaded.
 
@@ -273,8 +273,10 @@ oneip
 
 Returns the ip of a VM:
 
-    $ oneping 9
-    172.16.0.200
+    $ oneip --check 172.16.77.134
+    $ oneip -c 172.16.77.134
+    $ oneip --get [NET_ID]
+    $ oneip -g [NET_ID]
 
 Useful for things like:
 
