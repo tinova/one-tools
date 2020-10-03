@@ -1,0 +1,11 @@
+listen:
+  ip: "0.0.0.0"
+  port: "8080"
+
+opennebula:
+  endpoint: "http://IP.IP.IP.IP:2633/RPC2"
+  username: "ONE_USERNAME"
+  password: "ONE_PASSWORD"
+
+log:
+  dir_path: "/var/log/neapi"

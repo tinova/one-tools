@@ -1,0 +1,11 @@
+[Unit]
+Description=onemtu
+After=network.target
+
+[Service]
+ExecStart= /opt/onemtu/onemtu /opt/onemtu/onemtu_conf.yaml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

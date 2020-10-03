@@ -1,0 +1,10 @@
+[Unit]
+Description=onemtu client
+After=NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/onemtu/onemtu_client /opt/onemtu/onemtu_client.conf
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+configFile=$1
+
+serverIP=$(grep "^serverIP"  $1| awk -F = '{print$2}')
+serverPort=$(grep "^serverPort"  $1| awk -F = '{print$2}')
+netID=$(grep "^netID"  $1| awk -F = '{print$2}')
+mtu=$(grep "^mtu"  $1| awk -F = '{print$2}')
+logDir=$(grep "^logDir"  $1| awk -F = '{print$2}')
+
+mkdir -p $logDir
+mount /dev/sr0 /mnt
+
+VMID=$(cat /mnt/context.sh | grep "^VMID" | awk -F= '{print $2}' | tr -d \')
+umount /mnt
+for seq in 1 2 3 4 5 6 7 8 9 10
+  do
+  result=$(timeout 2 bash -c "</dev/tcp/$serverIP/$serverPort")
+  if [[ $result -eq 0 ]]
+  then
+    curl -XGET http://$serverIP:$serverPort/vmupdate/$netID/$VMID/mtu/$mtu
+    echo "onemtu has been called (curl -XGET http://$serverIP:$serverPort/vmupdate/$VMID/$netID/mtu/$mtu)" >> $logDir/onemtu_client.log
+    exit
+  else
+      echo "endpoint not available (curl -XGET http://$serverIP:$serverPort/vmupdate/$VMID/$netID/mtu/$mtu)" >> $logDir/onemtu_client.log
+  fi
+sleep $seq
+done

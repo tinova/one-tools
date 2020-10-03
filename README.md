@@ -1,3 +1,4 @@
+
 OpenNebula CLI Tools
 ====================
 
@@ -271,16 +272,12 @@ Pings a VM:
 oneip
 -----
 
-Returns the ip of a VM:
+Returns the status of an IP:
 
     $ oneip --check 172.16.77.134
     $ oneip -c 172.16.77.134
     $ oneip --get [NET_ID]
     $ oneip -g [NET_ID]
-
-Useful for things like:
-
-    $ scp myfile root@`oneip 0`:
 
 onedepkidnap
 ------------
@@ -304,6 +301,19 @@ Kidnaps deploy drv_action xml and writes it to /tmp/one_deploy_xmldrvaction. Add
 
     Remember to restore the deploy script afterwards:
      mv /home/tinova/dev/one/master/var/remotes/vmm/vcenter/deploy.bk /home/tinova/dev/one/master/var/remotes/vmm/vcenter/deploy
+
+
+onemtu
+------------
+
+This service is useful when you want to change the MTU of the VM interface on hypervisor host.
+* __onemtu__: This service must be installed and run on all OpenNebula nodes (mater and hypervisors)
+* __onemtu_client__: This service must be installed and run on VM. For automating this service you can put it in templates context
+
+How works :
+* The client call an API from master node/s which onemtu is running there
+* The onemtu find out the hypervisor node, which the VM is running on it and will call an API from onemtu service
+* the onemtu updates the MTU of interfaces which related to specified VM and specified Network
 
 Author
 ======
