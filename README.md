@@ -24,6 +24,7 @@ Commands
 - [__oneip__](#oneip): Returns state of IP (Used, Reserved, Free) and also get free IP to reserve.
 - [__oneping__](#oneping): Pings a VM.
 - [__onevcenterirb__](#onevcenterirb): Enters an irb environment with vCenter driver loaded.
+- [__onefind__](#onefind): Finds a value in object information. It accepts any path.
 
 *Dev commands*
 
@@ -281,6 +282,20 @@ Returns the ip of a VM:
 Useful for things like:
 
     $ scp myfile root@`oneip 0`:
+
+onefind
+-------
+
+Finds a value in object information:
+
+    $ onefind gold TEMPLATE/OBJ_TYPE
+    HOSTS
+    -----
+    2
+
+    DATASTORES
+    ----------
+    0
 
 onedepkidnap
 ------------
