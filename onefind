@@ -1,0 +1,155 @@
+#!/usr/bin/env ruby
+
+# This script finds all elements that have an specific value in their template
+# To run it, simply execute:
+#   ./find VALUE_TO_FIND PATH_TO_SEARCH
+#   ./find YES TEMPLATE/ALLOW_ORPHANS
+#
+# How you should read the output? The script will output the following:
+#   ELEMENT_NAME
+#   ------------
+#   ID_1
+#   ID_2
+#
+# If no elements are found, you will see a message like: `No elements found`
+#
+# WARNING: if you want to check all the elements in your cloud, run the script
+# under oneadmin (or oneadmin group) user
+
+ONE_LOCATION = ENV['ONE_LOCATION']
+
+if !ONE_LOCATION
+    RUBY_LIB_LOCATION = '/usr/lib/one/ruby'
+    GEMS_LOCATION     = '/usr/share/one/gems'
+else
+    RUBY_LIB_LOCATION = ONE_LOCATION + '/lib/ruby'
+    GEMS_LOCATION     = ONE_LOCATION + '/share/gems'
+end
+
+if File.directory?(GEMS_LOCATION)
+    $LOAD_PATH.reject! {|l| l =~ /vendor_ruby/ }
+    require 'rubygems'
+    Gem.use_paths(File.realpath(GEMS_LOCATION))
+end
+
+$LOAD_PATH << RUBY_LIB_LOCATION
+
+require 'opennebula'
+
+################################################################################
+# FUNCTIONS
+################################################################################
+
+# Search inside path
+#
+# @param hash [Hash]   Hash to seach in
+# @param path [String] Path to search on
+def dsearch(hash, path)
+    path.delete_if {|s| s.nil? || s.empty? }
+
+    path.each do |p|
+        if hash.is_a? Hash
+            if hash[p]
+                hash = hash[p]
+            else
+                hash = nil
+                break
+            end
+        else
+            hash = nil
+            break
+        end
+    end
+
+    hash
+end
+
+# Execute main loop to find elements
+#
+# @param pools [Array]  OpenNebula pools names
+# @param value [String] Value to find
+# @param path  [Array]  Path to search on
+#
+# @return [Hash] Hash with each element as key and found IDs as value
+def main(pools, value, path)
+    # Get client object to make calls
+    client = OpenNebula::Client.new
+    ret    = {}
+
+    # Iterate over all pools
+    pools.each do |p_class|
+        pool  = OpenNebula.const_get(p_class).new(client)
+        rc    = pool.info_all
+        ids   = []
+
+        if OpenNebula.is_error?(rc)
+            STDERR.puts rc.message
+            exit(-1)
+        end
+
+        # Iterate over each pool element
+        pool.each do |elem|
+            elem = elem.to_hash[pool.element_name]
+            id   = elem['ID']
+            elem = dsearch(elem, path)
+
+            next unless elem == value
+
+            ids << id
+        end
+
+        next if ids.empty?
+
+        ret[pool.element_name] = ids
+    end
+
+    ret
+end
+
+################################################################################
+################################################################################
+
+if !ARGV[0] && !ARGV[1]
+    STDERR.puts 'Value to find or path not provided!'
+    STDERR.puts '`find.rb` <value_to_find> <path>'
+    exit(-1)
+end
+
+# Get path to find value
+path = ARGV[1].split('/')
+
+unless path.is_a? Array
+    STDERR.puts 'Wrong path format! It should be A/B/C way'
+end
+
+################################################################################
+################################################################################
+
+# OpenNebula pools
+pools = OpenNebula.constants.select {|c| OpenNebula.const_get(c).is_a? Class }
+
+# Remove parent classes or pools that are accessed by other services like flow
+pools -= [:Pool,
+          :DocumentPool,
+          :ServicePool,
+          :ServiceTemplatePool,
+          :XMLPool,
+          :OpenNebulaServicePool]
+
+pools.select! {|p| p =~ /Pool$/ }
+
+ret = main(pools, ARGV[0], path)
+
+if ret.empty?
+    puts 'No elements found'
+else
+    ret.each do |key, value|
+        puts "#{key}S"
+        (key.size + 1).times { print '-' }
+        puts
+
+        value.each {|id| puts id }
+
+        puts unless key == ret.keys.last
+    end
+end
