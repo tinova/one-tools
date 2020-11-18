@@ -29,6 +29,12 @@ if [ -n "$ONE_LOCATION" ]; then
         monitor)
             $PAGER $ONE_LOCATION/var/monitor.log
             ;;
+        fireedge)
+            $PAGER $ONE_LOCATION/var/fireedge.log
+            ;;
+        fireedgerr)
+            $PAGER $ONE_LOCATION/var/fireedge.error
+            ;;
         *)
             $PAGER $ONE_LOCATION/var/vms/$1/vm.log
             ;;
@@ -56,6 +62,12 @@ else
             ;;
         monitor)
             $PAGER /var/log/one/monitor.log
+            ;;
+        fireedge)
+            $PAGER /var/log/one/fireedge.log
+            ;;
+        fireedgerr)
+            $PAGER /var/log/one/fireedge.err
             ;;
         *)
             $PAGER /var/log/one/$1.log
