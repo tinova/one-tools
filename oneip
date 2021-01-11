@@ -4,7 +4,7 @@ ARG_IP=""
 ARG_NET=""
 NET_IDS=$(onevnet list | grep -v ID | awk '{print $1}')
 
-if [ $1 == "-c" ] || [ $1 == "--check" ]
+if [ "$1" == "-c" ] || [ "$1" == "--check" ]
 then
 	if [[ $2 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
 	then
@@ -16,7 +16,7 @@ then
 		exit
 	fi
 fi
-if [ $1 == "-g" ] || [ $1 == "--get" ]
+if [ "$1" == "-g" ] || [ "$1" == "--get" ]
 then
 	NET_EXISTS=false
 	ARG_NET="$2"
@@ -36,8 +36,6 @@ then
 	fi
 fi
 
-
-
 ALL_IPS=""
 for NETS in $NET_IDS
 do
@@ -53,6 +51,21 @@ do
 			ALL_IPS="$ALL_IPS $SUBNET_IPS"
 	done
 done
+
+SUBNET_IPS=""
+NET_RANGES=$(onevnet show $ARG_NET | grep "^IP" | awk '{print $2 "-" $3}')
+for RANGE in $NET_RANGES
+do
+                RANGE_FIRST=$(echo $RANGE | awk -F \- '{print $1}')
+                RANGE_LAST=$(echo $RANGE | awk -F \- '{print $2}')
+                WILD_CARD=$(echo $RANGE_FIRST | awk -F \. '{print $1"."$2"."$3".%g" }')
+                RANGE_START=$(echo $RANGE_FIRST | awk -F \. '{print $4}')
+                RANGE_LAST=$(echo $RANGE_LAST | awk -F \. '{print $4}')
+                SUBNET_IPS=$(seq -f "$WILD_CARD" $RANGE_START $RANGE_LAST)
+                ALL_IPS="$ALL_IPS $SUBNET_IPS"
+done
+
+
 
 case $1 in
 
@@ -109,7 +122,7 @@ case $1 in
 	;;
 
 	"-g" | "--give")
-		USED_IPS=$(onevnet show $NET_ID | grep -Eo '[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+')
+		USED_IPS=$(onevnet show $ARG_NET | grep -Eo '[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+')
 		FOUND_IP=false	
 		for IP in $SUBNET_IPS
 		do
@@ -145,4 +158,3 @@ case $1 in
 		echo "oneip -g [NET_ID]"
 	;;
 esac
-
