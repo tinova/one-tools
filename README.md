@@ -25,6 +25,7 @@ Commands
 - [__oneping__](#oneping): Pings a VM.
 - [__onevcenterirb__](#onevcenterirb): Enters an irb environment with vCenter driver loaded.
 - [__onefind__](#onefind): Finds a value in object information. It accepts any path.
+- [__onepush__](#onepush): Copy a file on a VM with qemu guest agent running on it
 
 *Dev commands*
 
@@ -268,6 +269,14 @@ oneping
 Pings a VM:
 
     $ oneping 9
+
+onepush
+-------
+
+Copy a file in a VM via qemu guest agent.
+Usage: `onepush VM_ID SRC_FILE DST_FILE`
+
+    $ onepush 1234 hosts_for_vm_1234 /etc/hosts
 
 oneip
 -----

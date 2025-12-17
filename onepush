@@ -1,0 +1,89 @@
+#!/usr/bin/ruby
+
+$LOAD_PATH << '/usr/lib/one/ruby/'
+Gem.paths = {
+  'GEM_PATH' => '/usr/share/one/gems-dist'
+}
+
+require 'base64'
+require 'json'
+require 'nokogiri'
+require 'opennebula'
+
+def get_vm_host(vm_id)
+  c = OpenNebula::Client.new
+
+  vm_pool = OpenNebula::VirtualMachinePool.new(c)
+  rc = vm_pool.info_all!
+  raise rc.message if OpenNebula.is_error?(rc)
+
+  vm_pool.retrieve_xmlelements("VM[ID=#{vm_id}]/HISTORY_RECORDS/HISTORY[last()]/HOSTNAME")[0] \
+    || abort("Machine #{vm_id} does not exist or is not running")
+
+  vm_pool.retrieve_xmlelements("VM[ID=#{vm_id}]/HISTORY_RECORDS/HISTORY[last()]/HOSTNAME")[0].text
+end
+
+def query_vm_agent(vm_id, query, host = 'localhost')
+  cmd = "virsh -c 'qemu+ssh://#{host}/system' qemu-agent-command one-#{vm_id} '#{query.to_json}'"
+  out = `#{cmd}`
+  JSON.parse(out)
+end
+
+def guest_change_permissions(vm_id, remote_path, permissions)
+  host = get_vm_host(vm_id)
+
+  exec_chmod = { 'execute' => 'guest-exec',
+                 'arguments' => {
+                   'path' => '/bin/chmod',
+                   'arg' => [permissions, remote_path]
+                }
+  }
+
+  query_vm_agent(vm_id, exec_chmod, host)
+end
+
+def guest_file_write(vm_id, local_path, remote_path)
+  host = get_vm_host(vm_id)
+  openfile = { 'execute' => 'guest-file-open',
+                 'arguments' => {
+                   'path' => remote_path,
+                   'mode' => 'w'
+                 }
+  }
+
+  handle = query_vm_agent(vm_id, openfile, host)['return']
+
+  abort("Couldn't open file #{remote_path} in the guest") unless handle >= 0
+
+  writefile = { 'execute' => 'guest-file-write',
+                'arguments' => {
+                  'handle' => handle,
+                  'buf-b64' => Base64.encode64(File.open(local_path, 'rb').read)
+                }
+  }
+
+  wstatus = query_vm_agent(vm_id, writefile, host)['return']
+  puts("#{wstatus['count']} bytes written from #{local_path} to VM #{vm_id} on #{remote_path}")
+
+  closefile = { 'execute' => 'guest-file-close',
+          'arguments' => {'handle' => handle }
+  }
+
+  status = query_vm_agent(vm_id, closefile, host)
+end
+
+ARGV.length != 3 && abort("Usage: #{ARGV[0]} VM_ID SOURCE_FILE DESTINATION_FILE")
+
+VM_ID, SRC_FILE, DST_FILE = ARGV[0], ARGV[1], ARGV[2]
+
+VM_ID =~ %r{[0-9]+} || abort("#{VM_ID} is not a valid ID for a VM")
+File.exist?(SRC_FILE) || abort("File #{SRC_FILE} does not exist")
+DST_FILE =~ %r{^(\/[A-z0-9_-]+)+} || abort("Destination file #{DST_FILE} does not look like a valid path")
+
+SRC_PERMISSIONS = (format('%04o', File.stat(SRC_FILE).mode))[3..]
+
+
+guest_file_write(VM_ID, SRC_FILE, DST_FILE)
+guest_change_permissions(VM_ID, DST_FILE, SRC_PERMISSIONS)
+
+
